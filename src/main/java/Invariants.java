@@ -1,111 +1,131 @@
 import java.util.*;
 
 /**
- * Calcula P-invariantes o T-invariantes de una Red de Petri.
+ * Calculation of P-invariants and T-invariants of a Petri Net.
  * 
- * - T-invariantes: vectores y no negativos tal que W*y = 0 (secuencias de disparo que retornan al marcado inicial)
- * - P-invariantes: vectores x no negativos tal que x^T*W = 0 o equivalentemente W^T*x = 0 (componentes conservativas)
- * Donde W es la matriz de incidencia de la red (Post - Pre)
+ * - T-invariants: non-negative vector y such that W*y = 0 (firing sequences that return to the initial marking)
+ * - P-invariants: non-negative vector x such that x^T*W = 0 or equivalently W^T*x = 0 (conservative components such as idle places, resources or restrictions)
+ * Where W is the network incidence matrix (Post - Pre)
  * 
  * @author Juan Ignacio Sassi
  */
 public class Invariants {
     private final int[][] W;
-    private final boolean isPInvariant;
+    private final int[][] Wt;
+    private List<List<Integer>> pInvariant;
+    private List<List<Integer>> tInvariant;
 
     /**
-     * Constructor que inicializa el calculador de invariantes.
+     * Constructor that initializes the invariant calculator.
      * 
-     * @param W Matriz de incidencia (Post - Pre) de la Red de Petri
-     * @param isPInvariant true para calcular P-invariantes, false para T-invariantes
+     * @param W Incidence matrix (Post - Pre) of the Petri Net
      */
-    public Invariants(int[][] W, boolean isPInvariant) {
-        this.isPInvariant = isPInvariant;
-        
-        // Para P-invariantes necesitamos W^T (transpuesta)
-        if(isPInvariant){
-            int rows = W.length;
-            int cols = W[0].length;
-            int[][] Wt = new int[cols][rows];
-            for (int i = 0; i < rows; i++) {
-                for (int j = 0; j < cols; j++) {
-                    Wt[j][i] = W[i][j];
-                }
+    public Invariants(int[][] W) {
+        this.W = W;
+        int rows = W.length;
+        int cols = W[0].length;
+        int[][] Wtransposed = new int[cols][rows];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                Wtransposed[j][i] = W[i][j];
             }
-            this.W = Wt;
-        } else {
-            this.W = W;
         }
+        this.Wt = Wtransposed;
+
+        this.pInvariant = computeInvariants(Wt);
+        this.tInvariant = computeInvariants(W);
     }
 
     /**
-     * Calcula e imprime todos los invariantes minimales.
+     * Computes all minimal invariants of the input matrix.
      * 
-     * El proceso:
-     * 1. Calcula la base del nullspace de W (o W^T para P-invariantes)
-     * 2. Genera todas las combinaciones lineales no negativas de los vectores base
-     * 3. Filtra solo los invariantes minimales (sin componentes redundantes)
-     * 4. Ordena e imprime los resultados
+     * Process:
+     * 1. Computes the nullspace basis of the matrix (W for T-invariants or W^T for P-invariants)
+     * 2. Generates all non-negative linear combinations of the basis vectors
+     * 3. Filters only minimal invariants (without redundant components)
+     * 4. Sort the results
+     * 
+     * @param matrix matrix in which the invariants are sought
+     * @return List of vectors that make up the invariants 
+     * (either T-invariants in the case where matrix = W 
+     * or P-invariants in the case where matrix = W^T)
      */
-    public void computeInvariants() {
-        List<int[]> nullBasis=MatrixUtils.computeNullspace(this.W);
-        System.out.println("\nBase del nullspace (" + nullBasis.size() + " vectores):");
-        for (int i = 0; i < nullBasis.size(); i++) {
-            System.out.println("v" + (i + 1) + " = " + Arrays.toString(nullBasis.get(i)));
-        }
-
-        // LÃ­mite para cada coeficiente en las combinaciones lineales
+    public List<List<Integer>> computeInvariants(int[][] matrix) {
+        List<int[]> nullBasis=MatrixUtils.computeNullspace(matrix);
+        // Limit for each coefficient in the linear combinations
         int maxCoeff = 4 ;
-        
         Set<List<Integer>> all = new HashSet<>();
-        
-        // Generar todas las combinaciones lineales no negativas
+
+        // Generate all non-negative linear combinations
         generateCombinations(nullBasis, new int[nullBasis.size()], 0, maxCoeff, all);
-        
         if (all.isEmpty()) {
             System.out.println("\nWARNING: No invariants found.");
         }
 
-        // Filtrar solo los invariantes minimales
+        // Filter only minimal invariants
         List<List<Integer>> minimal=new ArrayList<>();
         for(List<Integer> inv:all) 
             if(isMinimal(inv,all)) 
                 minimal.add(inv);
 
-        // Ordenar por suma de componentes (invariantes mÃ¡s simples primero)
+        // Sort by sum of components (simplest invariants first)
         minimal.sort(Comparator.comparingInt(v->v.stream().mapToInt(Integer::intValue).sum()));
+        return minimal;
+    }
 
-        System.out.println("\n======================================================================");
-        System.out.println((isPInvariant ? "P" : "T") + "- (minimal invariants found): " + minimal.size());
-        System.out.println("======================================================================\n");
-
-        for(int i=0;i<minimal.size();i++) {
-            String prefix = isPInvariant ? "x" : "y";
-            System.out.println(prefix+(i+1)+" = "+minimal.get(i));
+    /**
+     * Computes and prints all minimal P-invariants to the console.
+     * 
+     * Displays the total number of P-invariants found and lists each one
+     * in the format "x1 = [vector]", "x2 = [vector]", etc.
+     * P-invariants represent conservative components of the Petri Net.
+     */
+    public void printPInvariants() {
+        pInvariant = computeInvariants(Wt);
+        System.out.println("\n=================================");
+        System.out.println(("P") + "- (minimal invariants found): " + pInvariant.size());
+        System.out.println("=================================\n");
+        for(int i=0;i<pInvariant.size();i++) {
+            System.out.println("x"+(i+1)+" = "+pInvariant.get(i));
         }
     }
 
     /**
-     * Genera recursivamente todas las combinaciones lineales no negativas de los vectores base.
+     * Computes and prints all minimal T-invariants to the console.
      * 
-     * Para cada vector base, prueba coeficientes de -maxCoeff a +maxCoeff.
-     * Solo agrega combinaciones que resulten en vectores completamente no negativos.
+     * Displays the total number of T-invariants found and lists each one
+     * in the format "y1 = [vector]", "y2 = [vector]", etc.
+     * T-invariants represent firing sequences that return to the initial marking.
+     */
+    public void printTInvariants() {
+        tInvariant = computeInvariants(W);
+        System.out.println("\n=================================");
+        System.out.println(("T") + "- (minimal invariants found): " + tInvariant.size());
+        System.out.println("=================================\n");
+        for(int i=0;i<tInvariant.size();i++) {
+            System.out.println("y"+(i+1)+" = "+tInvariant.get(i));
+        }
+    }
+
+    /**
+     * Recursively generates all non-negative linear combinations of the basis vectors.
      * 
-     * @param basis Vectores base del nullspace
-     * @param coeffs Array de coeficientes (se va llenando recursivamente)
-     * @param idx Ãndice actual en la recursiÃ³n
-     * @param maxCoeff Valor mÃ¡ximo absoluto para cada coeficiente
-     * @param set Conjunto donde se almacenan las combinaciones vÃ¡lidas
+     * For each basis vector, test coefficients from -maxCoeff to +maxCoeff.
+     * Only add combinations that result in completely non-negative vectors.
+     * 
+     * @param basis Nullspace basis vectors
+     * @param coeffs Array of coefficients (filled recursively)
+     * @param idx Current index in the recursion
+     * @param maxCoeff Absolute maximum value for each coefficient
+     * @param set Set where valid combinations are stored
      */
     private void generateCombinations(List<int[]> basis, int[] coeffs, int idx, int maxCoeff, Set<List<Integer>> set) {
         if (idx == basis.size()) {
-            // Caso base: se han asignado todos los coeficientes
-            
             int n = basis.get(0).length;
             int[] combo = new int[n];
             boolean allZero = true;
             
-            // Calcular la combinaciÃ³n lineal: combo = Î£(coeffs[i] * basis[i])
+            // Calculate the linear combination
             for (int i = 0; i < basis.size(); i++) {
                 if (coeffs[i] != 0) allZero = false;
                 for (int j = 0; j < n; j++) {
@@ -113,9 +133,9 @@ public class Invariants {
                 }
             }
             
-            if (allZero) return; // Ignorar el vector cero trivial
+            if (allZero) return; // Ignore the trivial zero vector
             
-            // Verificar que sea no negativo y tenga al menos un componente positivo
+            // Verify that it is non-negative and has at least one positive component.
             boolean nonNeg = true, anyPos = false;
             for (int v : combo) {
                 if (v < 0) {
@@ -126,7 +146,7 @@ public class Invariants {
             }
             
             if (nonNeg && anyPos) {
-                // Reducir el vector a su forma minimal dividiendo por el MCD
+                // Reduce the vector to its minimal form by dividing by the GCD
                 int g = MatrixUtils.gcdArray(combo);
                 if (g > 0) {
                     for (int j = 0; j < combo.length; j++) {
@@ -134,7 +154,7 @@ public class Invariants {
                     }
                 }
                 
-                // Agregar al conjunto (duplicados se eliminan automÃ¡ticamente)
+                // Add to set (duplicates are automatically removed)
                 List<Integer> lst = new ArrayList<>();
                 for (int v : combo) lst.add(v);
                 set.add(lst);
@@ -142,7 +162,7 @@ public class Invariants {
             return;
         }
         
-        // Caso recursivo: probar todos los coeficientes posibles para el vector actual
+        // Recursive case: test all possible coefficients for the current vector
         for (int c = -maxCoeff; c <= maxCoeff; c++) {
             coeffs[idx] = c;
             generateCombinations(basis, coeffs, idx + 1, maxCoeff, set);
@@ -150,26 +170,23 @@ public class Invariants {
     }
 
     /**
-     * Verifica si un invariante es minimal.
+     * Checks whether an invariant is minimal.
      * 
-     * Un invariante es minimal si no existe otro invariante cuyo soporte
-     * (conjunto de Ã­ndices con valores positivos) sea un subconjunto propio del suyo.
+     * An invariant is minimal if there is no other invariant whose support 
+     * (set of indices with positive values) is a proper subset of its own.
      * 
-     * Ejemplo: Si x1 = [1,1,0] y x2 = [1,0,0], entonces x1 NO es minimal porque
-     * el soporte de x2 {0} estÃ¡ estrictamente contenido en el soporte de x1 {0,1}.
-     * 
-     * @param inv Invariante a verificar
-     * @param all Conjunto de todos los invariantes encontrados
-     * @return true si el invariante es minimal, false en caso contrario
+     * @param inv Invariant to be verified
+     * @param all Set of all invariants found
+     * @return true if the invariant is minimal, false otherwise
      */
     private boolean isMinimal(List<Integer> inv, Set<List<Integer>> all) {
-        // Calcular el soporte del invariante actual
+        // Compute the support of the current invariant
         Set<Integer> supp = new HashSet<>();
         for (int i = 0; i < inv.size(); i++) 
             if (inv.get(i) > 0) 
                 supp.add(i);
         
-        // Verificar contra todos los demÃ¡s invariantes
+        // Check against all other invariants
         for (List<Integer> other : all) {
             if (other.equals(inv)) continue;
             
@@ -178,11 +195,35 @@ public class Invariants {
                 if (other.get(i) > 0) 
                     supp2.add(i);
             
-            // Si otro invariante tiene soporte estrictamente contenido,
-            // entonces este NO es minimal
+            // If another invariant has strictly contained support then it is not minimal.
             if (supp.containsAll(supp2) && !supp.equals(supp2)) 
                 return false;
         }
         return true;
+    }
+
+    /**
+     * Returns the list of computed P-invariants.
+     * 
+     * P-invariants are non-negative vectors x such that x^T*W = 0, representing
+     * conservative components of the Petri Net (e.g., resources, places that
+     * maintain constant token counts across firing sequences).
+     * 
+     * @return List of minimal P-invariant vectors
+     */
+    public List<List<Integer>> getPInvariants(){
+        return pInvariant;
+    }
+
+    /**
+     * Returns the list of computed T-invariants.
+     * 
+     * T-invariants are non-negative vectors y such that W*y = 0, representing
+     * firing sequences that return the net to its initial marking (cyclic behavior).
+     * 
+     * @return List of minimal T-invariant vectors
+     */
+    public List<List<Integer>> getTInvariants(){
+        return tInvariant;
     }
 }

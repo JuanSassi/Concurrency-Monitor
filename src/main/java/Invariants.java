@@ -83,8 +83,7 @@ public class Invariants {
     public void printPInvariants() {
         pInvariant = computeInvariants(Wt);
         System.out.println("\n=================================");
-        System.out.println(("P") + "- (minimal invariants found): " + pInvariant.size());
-        System.out.println("=================================\n");
+        System.out.println(("P") + "- (minimal invariants found): " + pInvariant.size() + "\n");
         for(int i=0;i<pInvariant.size();i++) {
             System.out.println("x"+(i+1)+" = "+pInvariant.get(i));
         }
@@ -100,8 +99,7 @@ public class Invariants {
     public void printTInvariants() {
         tInvariant = computeInvariants(W);
         System.out.println("\n=================================");
-        System.out.println(("T") + "- (minimal invariants found): " + tInvariant.size());
-        System.out.println("=================================\n");
+        System.out.println(("T") + "- (minimal invariants found): " + tInvariant.size() + "\n");
         for(int i=0;i<tInvariant.size();i++) {
             System.out.println("y"+(i+1)+" = "+tInvariant.get(i));
         }
@@ -225,5 +223,28 @@ public class Invariants {
      */
     public List<List<Integer>> getTInvariants(){
         return tInvariant;
+    }
+
+    /**
+     * Prints the transitions that are part of each T-Invariant.
+     */
+    public void printTransitionsOfTI() {
+        
+        System.out.println("\n=================================");
+        System.out.println("T-Invariant Transitions\n");
+        
+        for (int i = 0; i < tInvariant.size(); i++) {
+            List<Integer> tInv = tInvariant.get(i);
+            
+            // Filter transitions that belong to the invariant (value > 0)
+            List<String> transitionNames = new ArrayList<>();
+            for (int t = 0; t < tInv.size(); t++) {
+                if (tInv.get(t) > 0) {
+                    transitionNames.add("T" + t);
+                }
+            }
+            
+            System.out.println("y" + (i + 1) + ": " + transitionNames);
+        }
     }
 }

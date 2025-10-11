@@ -1,12 +1,6 @@
 import java.util.*;
 
 /**
- * Algorithm for determining maximum concurrent active threads.
- * 
- * This class implements the algorithm described in the article:
- * "Algorithms to determine quantity and responsibility of threads in embedded
- * systems modeled with S³PR Petri Nets" (Ventre & Micolini, 2021).
- * 
  * The algorithm automatically classifies the places of a Petri Net into:
  *   - Action places: participate in multiple place invariants
  *   - Resource places: appear in a single invariant (includes idle, resources and restrictions)

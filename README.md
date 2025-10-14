@@ -6,7 +6,7 @@
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white"/>
 </p>
 
-> Proyecto para implementar simulaciones de Redes de Petri, administrando la concurrencia a través de un monitor.
+Proyecto para implementar simulaciones de Redes de Petri, administrando la concurrencia a través de un monitor.
 
 Los algoritmos referentes a determinar la cantidad de hilos y sus respectivas responsabilidades se basan en conceptos presentados en el siguiente abstract de los ingenieros **Orlando Micolini** y **Luis Orlando Ventre**:
 
@@ -40,7 +40,6 @@ Finalmente, se procede a realizar un análisis temporal y diversas estadísticas
 - Herramientas de Build **Gradle:** 4.4.1
 - Containerización **Docker:** 27.5.1
 - Sistema Operativo de Desarrollo **OS:** Linux 6.14.0-33-generic amd64 (Ubuntu 24.04)
-
 
 ---
 

@@ -36,26 +36,12 @@ Finalmente, se procede a realizar un análisis temporal y diversas estadísticas
 
 ## Tecnologías Utilizadas
 
-### Lenguaje y Entorno de Ejecución
-- **Java:** OpenJDK 21.0.8
-  - OpenJDK Runtime Environment (build 21.0.8+9-Ubuntu-0ubuntu124.04.1)
-  - OpenJDK 64-Bit Server VM (mixed mode, sharing)
+- Lenguaje y Entorno de Ejecución **Java:** OpenJDK 21.0.8
+- Herramientas de Build **Gradle:** 4.4.1
+- Containerización **Docker:** 27.5.1
+- Sistema Operativo de Desarrollo **OS:** Linux 6.14.0-33-generic amd64 (Ubuntu 24.04)
 
-### Herramientas de Build
-- **Gradle:** 4.4.1
-  - Groovy: 2.4.21
-  - Apache Ant: 1.10.14
 
-### Containerización
-- **Docker:** 27.5.1
-
-### Sistema Operativo de Desarrollo
-- **OS:** Linux 6.14.0-33-generic amd64 (Ubuntu 24.04)
-
-### Librerías y Dependencias
-- Java Collections Framework
-- Java Concurrency API (`java.util.concurrent`)
-- Java Properties (Configuración)
 ---
 
 ## Licencia

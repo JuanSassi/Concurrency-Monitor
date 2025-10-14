@@ -6,16 +6,16 @@
   <img src="https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white"/>
 </p>
 
-> Implementación de simulación de una Red de Petri, administrando la concurrencia de la red a través de un monitor.
+> Proyecto para implementar simulaciones de Redes de Petri, administrando la concurrencia a través de un monitor.
 
-Los algoritmos utilizados para determinar la cantidad de hilos y sus respectivas responsabilidades se basan en conceptos presentados en el siguiente trabajo de los ingenieros **Orlando Micolini** y **Luis Orlando Ventre**:
+Los algoritmos referentes a determinar la cantidad de hilos y sus respectivas responsabilidades se basan en conceptos presentados en el siguiente abstract de los ingenieros **Orlando Micolini** y **Luis Orlando Ventre**:
 
 > [**Algoritmos para determinar cantidad y responsabilidad de hilos en sistemas embebidos modelados con Redes de Petri (S-3-PR1)**](https://www.researchgate.net/publication/358104149_Algoritmos_para_determinar_cantidad_y_responsabilidad_de_hilos_en_sistemas_embebidos_modelados_con_Redes_de_Petri_S_3_PR1)  
 > Micolini, O., & Ventre, L. O. (2022). ResearchGate.
 
 ---
 
-## Descripción
+## Descripción del código
 
 En el presente proyecto se implementa la **ejecución y análisis de Redes de Petri**. Estas modelan sistemas que típicamente son concurrentes, ya que diversos procesos deben interactuar de manera coordinada al compartir recursos. Los recursos deben ser gestionados eficientemente para maximizar el rendimiento, por lo que el sistema planteado presenta desafíos típicos de la programación concurrente, requiriéndose al menos un mecanismo de sincronización para coordinar las diferentes etapas de los procesos, en este caso un **monitor de concurrencia**.
 

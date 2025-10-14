@@ -1,0 +1,28 @@
+# Ignore build files
+build/
+.gradle/
+
+# Ignore IDE files
+.idea/
+.vscode/
+*.iml
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore git files
+.git/
+.gitignore
+
+# Ignore Docker files
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Ignore documentation files
+README.md
+*.md
+
+# Ignore log files
+*.log

@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  concurrency-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: concurrency-monitor
+    ports:
+      - "8080:8080"
+    volumes:
+      # Create logs directory if it doesn't exist and mount it
+      - ./logs:/app/logs
+      # Optional: mount the entire project for development
+      - .:/app/project:ro
+    environment:
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    # Restart policy in case the application needs to be restarted
+    restart: unless-stopped
+    # For debugging purposes, keep container running even if app exits
+    # Comment out the next line for production
+    # tty: true
+    # stdin_open: true

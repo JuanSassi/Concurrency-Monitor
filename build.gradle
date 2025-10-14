@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    implementation 'org.ejml:ejml-simple:0.43.1'
 }
 
 test {

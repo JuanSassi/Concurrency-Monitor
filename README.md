@@ -8,6 +8,11 @@
 
 > Implementación de simulación de una Red de Petri, administrando la concurrencia de la red a través de un monitor.
 
+Los algoritmos utilizados para determinar la cantidad de hilos y sus respectivas responsabilidades se basan en conceptos presentados en el siguiente trabajo de los ingenieros **Orlando Micolini** y **Luis Orlando Ventre**:
+
+> [**Algoritmos para determinar cantidad y responsabilidad de hilos en sistemas embebidos modelados con Redes de Petri (S-3-PR1)**](https://www.researchgate.net/publication/358104149_Algoritmos_para_determinar_cantidad_y_responsabilidad_de_hilos_en_sistemas_embebidos_modelados_con_Redes_de_Petri_S_3_PR1)  
+> Micolini, O., & Ventre, L. O. (2022). ResearchGate.
+
 ---
 
 ## Descripción
@@ -26,9 +31,6 @@ En resumen, el sistema calcula los **P-invariantes** (de los cuales se deduce qu
 Una vez determinada la cantidad de hilos y sus responsabilidades (secuencias de disparos), inicia la simulación de la red. Los disparos se realizan de manera concurrente en el monitor, asegurando que los recursos solo sean utilizados por un hilo a la vez. La simulación finaliza una vez alcanzado el máximo de invariantes permitidos (186 por defecto).
 
 Finalmente, se procede a realizar un análisis temporal y diversas estadísticas referentes a cada hilo.
-
-## Objetivos
-
 ---
 
 ## Tecnologías Utilizadas
@@ -53,19 +55,11 @@ Finalmente, se procede a realizar un análisis temporal y diversas estadísticas
 - Java Collections Framework
 - Java Concurrency API (`java.util.concurrent`)
 - Java Properties (Configuración)
-
 ---
-
-## Características Principales
-## Arquitectura del Sistema
-
-## Documentación Adicional
-
-## Autor
 
 ## Licencia
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg"/>
 </p>
 
-Copyright (c) 2025 Sassi Juan Ignacio
+Copyright © 2025 Sassi Juan Ignacio

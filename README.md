@@ -31,6 +31,7 @@ En resumen, el sistema calcula los **P-invariantes** (de los cuales se deduce qu
 Una vez determinada la cantidad de hilos y sus responsabilidades (secuencias de disparos), inicia la simulación de la red. Los disparos se realizan de manera concurrente en el monitor, asegurando que los recursos solo sean utilizados por un hilo a la vez. La simulación finaliza una vez alcanzado el máximo de invariantes permitidos (186 por defecto).
 
 Finalmente, se procede a realizar un análisis temporal y diversas estadísticas referentes a cada hilo.
+
 ---
 
 ## Tecnologías Utilizadas
@@ -58,8 +59,9 @@ Finalmente, se procede a realizar un análisis temporal y diversas estadísticas
 ---
 
 ## Licencia
+
+Copyright © 2025 Sassi Juan Ignacio
+
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg"/>
 </p>
-
-Copyright © 2025 Sassi Juan Ignacio

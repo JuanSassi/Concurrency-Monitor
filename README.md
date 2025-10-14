@@ -8,7 +8,11 @@
 
 > Implementación de simulación de una Red de Petri, administrando la concurrencia de la red a través de un monitor.
 
-![Red de Petri](captures/PIPE.png)
+<br>
+<p align="center">
+    <img src="./captures/PIPE.png" alt="ISI" width="600"/>
+</p>
+<br>
 
 ---
 

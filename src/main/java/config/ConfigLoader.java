@@ -14,6 +14,7 @@ import java.util.Properties;
 class ConfigLoader {
     /** Properties object holding all configuration key-value pairs */
     private static Properties config;
+    private static String properties = "config.properties";
     
     /**
      * Static initialization block that loads the configuration file
@@ -35,7 +36,7 @@ class ConfigLoader {
      * @throws RuntimeException if the config.properties file cannot be found or read
      */
     private static void loadConfig() {
-        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
+        try (InputStream input = ConfigLoader.class.getClassLoader().getResourceAsStream(properties)) {
             if (input == null) {
                 throw new RuntimeException("Could not find config.properties in resources");
             }

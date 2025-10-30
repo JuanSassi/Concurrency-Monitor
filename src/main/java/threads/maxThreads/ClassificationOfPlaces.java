@@ -38,6 +38,8 @@ public class ClassificationOfPlaces {
     /** Temporary set of candidate places to be resources (appear in a single invariant) */
     private Set<Integer> possibleRecourse;
 
+    private List<List<Integer>> PAofIT;
+
     /**
      * Constructor that initializes the algorithm with the Petri Net matrices.
      * 
@@ -54,6 +56,7 @@ public class ClassificationOfPlaces {
         resourcePlaces = new HashSet<>();
         actionPlaces = new HashSet<>();
         possibleRecourse = new HashSet<>();
+        PAofIT = new ArrayList<>();
 
         this.pre = pre;
         this.post = post;
@@ -62,6 +65,8 @@ public class ClassificationOfPlaces {
         this.numPlaces = pre.length;
         this.numTransitions = pre[0].length;
         this.invariants = invariants;
+        classifyPlaces();
+        this.PAofIT = getPAofIT();
     }
 
     /**
@@ -202,33 +207,18 @@ public class ClassificationOfPlaces {
      * Prints the action places of each T-Invariant.
      */
     public void printPAofIT() {
-        List<List<Integer>> tInvariants = invariants.getTInvariants();
-        
         System.out.println("\n=================================");
         System.out.println("Set of action places associated with each Transition Invariant (PA of TI) \n");
         
-        for (int i = 0; i < tInvariants.size(); i++) {
-            List<Integer> tInv = tInvariants.get(i);
-            
-            Set<Integer> involvedPlaces = new TreeSet<>();
-            
-            // For each transition of the T-Invariant
-            for (int t = 0; t < numTransitions; t++) {
-                if (tInv.get(t) > 0) {  // If the transition belongs to the invariant
-                    
-                    // Add all places connected to this transition
-                    for (int p = 0; p < numPlaces; p++) {
-                        // If the transition consumes or produces in this place
-                        if (pre[p][t] > 0 || post[p][t] > 0) {
-                            involvedPlaces.add(p);
-                        }
-                    }
-                }
-            }
-            
-            // Filter only action places (exclude resources/idle/restrictions)
-            List<String> actionPlaceNames = involvedPlaces.stream()
-                    .filter(p -> actionPlaces.contains(p))  // Only action places
+        // Validar que PAofIT esté calculado
+        if (PAofIT == null || PAofIT.isEmpty()) {
+            System.out.println("No action places calculated yet. Please run classifyPlaces() first.\n");
+            return;
+        }
+        
+        for (int i = 0; i < PAofIT.size(); i++) {
+            // Convert indices to "P0, P1, P2, ..." format
+            List<String> actionPlaceNames = PAofIT.get(i).stream()
                     .map(p -> "P" + p)
                     .toList();
             
@@ -253,5 +243,42 @@ public class ClassificationOfPlaces {
 
     public Set<Integer> getActionPlaces() {
         return actionPlaces;
+    }
+
+    /**
+     * Calculates the action places for each T-Invariant.
+     * This method should be called AFTER classifyPlaces() has been executed.
+     */
+    public List<List<Integer>> getPAofIT() {
+        List<List<Integer>> result = new ArrayList<>();
+        List<List<Integer>> tInvariants = invariants.getTInvariants();
+        
+        for (int i = 0; i < tInvariants.size(); i++) {
+            List<Integer> tInv = tInvariants.get(i);
+            Set<Integer> involvedPlaces = new TreeSet<>();
+            
+            // For each transition of the T-Invariant
+            for (int t = 0; t < numTransitions; t++) {
+                if (tInv.get(t) > 0) { // If the transition belongs to the invariant
+                    // Add all places connected to this transition
+                    for (int p = 0; p < numPlaces; p++) {
+                        // If the transition consumes or produces in this place
+                        if (pre[p][t] > 0 || post[p][t] > 0) {
+                            involvedPlaces.add(p);
+                        }
+                    }
+                }
+            }
+            
+            // Filter only action places (exclude resources/idle/restrictions)
+            List<Integer> filteredActionPlaces = involvedPlaces.stream()
+                .filter(p -> actionPlaces.contains(p)) // Only action places
+                .toList();
+            
+            // Add the filtered list to the result
+            result.add(filteredActionPlaces);
+        }
+        
+        return result;
     }
 }

@@ -14,7 +14,8 @@ import java.util.Properties;
 class ConfigLoader {
     /** Properties object holding all configuration key-value pairs */
     private static Properties config;
-    private static String properties = "config.properties";
+    //private static String properties = "config.properties";
+    private static String properties = "config2.properties";
     
     /**
      * Static initialization block that loads the configuration file

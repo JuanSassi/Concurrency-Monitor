@@ -206,4 +206,11 @@ public class PetriNet {
     public int getNumTransitions() {
         return numT;
     }
+
+    public void setMarking(int[] newMarking) {
+        if (newMarking.length != marking.length) {
+            throw new IllegalArgumentException("Invalid marking size");
+        }
+        System.arraycopy(newMarking, 0, marking, 0, marking.length);
+    }
 }

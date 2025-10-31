@@ -11,8 +11,8 @@ public class ThreadsHandler {
     
     public ThreadsHandler() {
         // Initialize all threads
-        final int assistantsPosition = 4; // COMO DEDUZCO CUANTOS HILOS??
-        this.entryProcesses = new Thread[ConfigLoader.getInitialMarkingVector()[assistantsPosition]];
+        final int assistantsPosition = 4;
+        this.entryProcesses = new Thread[PetrinetLoader.getInitialMarkingVector()[assistantsPosition]];
         
         // Create entry processes
         for (int i = 0; i < entryProcesses.length; i++) {

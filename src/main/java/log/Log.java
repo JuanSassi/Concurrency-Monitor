@@ -21,9 +21,9 @@ class Log {
     private static final Map<Integer, List<Long>> temporaryTransitionDurations = new ConcurrentHashMap<>();
     
     static {
-        temporalTransitions = ConfigLoader.getTemporalTransitionsVector();
+        temporalTransitions = PetrinetLoader.getTemporalTransitionsVector();
         // Initialize data structures for all transitions
-        for (int i = 0; i < ConfigLoader.getNumTransitions(); i++) {
+        for (int i = 0; i < PetrinetLoader.getNumTransitions(); i++) {
             countFiredTransitions.put(i, new AtomicInteger(0));
             transitionTimestamps.put(i, Collections.synchronizedList(new ArrayList<>()));
             processingTimes.put(i, Collections.synchronizedList(new ArrayList<>()));
@@ -95,7 +95,7 @@ class Log {
 
     private static void analyzeImmediateTransitions() {
         System.out.println("=== ANÁLISIS DE TRANSICIONES INMEDIATAS ===");
-        for (int i = 0; i < ConfigLoader.getNumTransitions(); i++) {
+        for (int i = 0; i < PetrinetLoader.getNumTransitions(); i++) {
             if (!isTemporary(i)) {
                 int count = countFiredTransitions.get(i).get();
                 List<Long> timestamps = transitionTimestamps.get(i);
@@ -121,7 +121,7 @@ class Log {
         System.out.println("=== ANÁLISIS DE TRANSICIONES TEMPORALES ===");
         
         // CORRECCIÓN: Iterar sobre las transiciones temporales correctamente
-        for (int i = 0; i < ConfigLoader.getNumTransitions(); i++) {
+        for (int i = 0; i < PetrinetLoader.getNumTransitions(); i++) {
             if (isTemporary(i)) {  // Solo procesar transiciones temporales
                 int count = countFiredTransitions.get(i).get();
                 
@@ -243,7 +243,7 @@ class Log {
         System.out.println("=== DATOS PARA ANÁLISIS EXTERNO ===");
         System.out.println("Transition,Count,MeanInterval,StdDev,Min,Max");
         
-        for (int i = 0; i < ConfigLoader.getNumTransitions(); i++) {
+        for (int i = 0; i < PetrinetLoader.getNumTransitions(); i++) {
             List<Long> timestamps = transitionTimestamps.get(i);
             if (timestamps.size() > 1) {
                 List<Long> intervals = calculateIntervals(timestamps);

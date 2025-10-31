@@ -23,10 +23,10 @@ class Sequences {
     public static final int[] confirmationProcess; //CONFIRMATION_PROCESS = {6, 9, 10, 11};
     
     static {
-        entryProcess = ConfigLoader.getEntryProcess();
-        reservationProcessAbove = ConfigLoader.getReservationProcessAbove();
-        reservationProcessBelow = ConfigLoader.getReservationProcessBelow();
-        cancellationProcess = ConfigLoader.getCancellationProcess();
-        confirmationProcess = ConfigLoader.getConfirmationProcess();
+        entryProcess = new int[] {0, 1};
+        reservationProcessAbove = new int[] {2, 5};
+        reservationProcessBelow = new int[] {3, 4};
+        cancellationProcess = new int[] {7, 8, 11};
+        confirmationProcess = new int[] {6, 9, 10, 11};
     }
 }

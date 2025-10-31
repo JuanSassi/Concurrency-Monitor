@@ -9,7 +9,7 @@
  *
  * @author Sassi Juan Ignacio
  */
-public class PetriNet {
+public class PetriNet { 
     /** Single static instance of PetriNet following Singleton pattern */
     private static PetriNet petriNet = new PetriNet();
 
@@ -48,12 +48,12 @@ public class PetriNet {
      * Initializes the marking with initial values and calculates the incidence matrix.
      */
     private PetriNet() {
-        this.numP = ConfigLoader.getNumPlaces();
-        this.numT = ConfigLoader.getNumTransitions();
-        this.pre = ConfigLoader.getPreMatrix();
-        this.post = ConfigLoader.getPostMatrix();
-        this.marking = ConfigLoader.getInitialMarkingVector();
-        this.temporalTransitions = ConfigLoader.getTemporalTransitionsVector();
+        this.numP = PetrinetLoader.getNumPlaces();
+        this.numT = PetrinetLoader.getNumTransitions();
+        this.pre = PetrinetLoader.getPreMatrix();
+        this.post = PetrinetLoader.getPostMatrix();
+        this.marking = PetrinetLoader.getInitialMarkingVector();
+        this.temporalTransitions = PetrinetLoader.getTemporalTransitionsVector();
 
         // Dimension validation
         if (pre.length != post.length) {

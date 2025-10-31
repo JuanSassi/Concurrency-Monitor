@@ -45,7 +45,7 @@ public class Monitor implements MonitorInterface {
             // Now the transition is enabled - fire it
             if(petriNet.isTemporary(transition)){
                 petriNet.consumeTokens(transition);
-                Log.addTransitionFiring(transition); //new
+                //Log.addTransitionFiring(transition); //new
                 lock.unlock();
 
                 long sleepStart = System.nanoTime(); //new
@@ -56,13 +56,13 @@ public class Monitor implements MonitorInterface {
                     lock.lock();
                     long sleepEnd = System.nanoTime(); //new
                     long sleepDuration = (sleepEnd - sleepStart) / 1_000_000; //new
-                    Log.addTemporaryTransitionDuration(transition, sleepDuration); //new
+                    //Log.addTemporaryTransitionDuration(transition, sleepDuration); //new
 
                     petriNet.produceTokens(transition);
                 }
             } else {
                 petriNet.fire(transition);
-                Log.addTransitionFiring(transition);
+                //Log.addTransitionFiring(transition);
             }
             System.out.print("Fired transition " + transition + " - Marcación actual: [ ");
             int[] marking = petriNet.getMarking();
@@ -80,10 +80,10 @@ public class Monitor implements MonitorInterface {
     }
 
     private void schedule() {
-        if (Log.endExecution()) {
+        /*if (Log.endExecution()) {
             endSimulation();
             return;
-        }
+        }*/
         if(petriNet.transitionEnabled(2) && petriNet.transitionEnabled(3)) {
             double p;
             p = Policy.getAgentPriority();

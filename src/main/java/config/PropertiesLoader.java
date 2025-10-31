@@ -25,7 +25,7 @@ class PropertiesLoader {
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    private PropertiesLoader() {
+    protected PropertiesLoader() {
 
     }
 

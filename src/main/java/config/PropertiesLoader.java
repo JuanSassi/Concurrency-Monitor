@@ -2,7 +2,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-public class PropertiesLoader {
+class PropertiesLoader {
     /** Properties object holding configuration key-value pairs */
     protected static Properties config;
     /** Properties object holding petri net specific configurations */
@@ -25,7 +25,7 @@ public class PropertiesLoader {
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    public PropertiesLoader() {
+    private PropertiesLoader() {
 
     }
 
@@ -94,7 +94,7 @@ public class PropertiesLoader {
      * @return the boolean value associated with the key
      * @throws RuntimeException if the key is not found or the value is not a valid boolean
      */
-    protected boolean getBoolean(String key) {
+    protected static boolean getBoolean(String key) {
         String value = config.getProperty(key);
         if (value == null) {
             throw new RuntimeException("Key not found: " + key);
@@ -117,7 +117,7 @@ public class PropertiesLoader {
      * @return the integer value associated with the key
      * @throws RuntimeException if the key is not found or the value cannot be parsed as an integer
      */
-    protected int getInt(String key) {
+    protected static int getInt(String key) {
         String value = config.getProperty(key);
         if (value == null) {
             throw new RuntimeException("Key not found: " + key);
@@ -136,7 +136,7 @@ public class PropertiesLoader {
      * @return the double value associated with the key
      * @throws RuntimeException if the key is not found or the value cannot be parsed as a double
      */
-    protected double getDouble(String key) {
+    protected static double getDouble(String key) {
         String value = config.getProperty(key);
         if (value == null) {
             throw new RuntimeException("Key not found: " + key);
@@ -156,7 +156,7 @@ public class PropertiesLoader {
      * @return an array of integers parsed from the comma-separated value
      * @throws RuntimeException if the key is not found, empty, or contains invalid integer values
      */
-    protected int[] getIntArray(String key) {
+    protected static int[] getIntArray(String key) {
         String value = petrinet.getProperty(key);
         if (value == null || value.trim().isEmpty()) {
             throw new RuntimeException("The key was not found or is empty: " + key);

@@ -1,5 +1,5 @@
-public class ConfigLoader extends PropertiesLoader{
-    public ConfigLoader() {
+class ConfigLoader extends PropertiesLoader{
+    private ConfigLoader() {
         super();
     }
 
@@ -8,7 +8,7 @@ public class ConfigLoader extends PropertiesLoader{
      * 
      * @return the maximum number of invariants
      */
-    public int getMaxInvariants() {
+    public static int getMaxInvariants() {
         return getInt("execution.max_invariants");
     }
 
@@ -17,7 +17,7 @@ public class ConfigLoader extends PropertiesLoader{
      * 
      * @return true if balanced policy is enabled, false otherwise
      */
-    public boolean getIsBalancedPolicy(){
+    public static boolean getIsBalancedPolicy(){
         return getBoolean("policies.is_balanced");
     }
 
@@ -26,7 +26,7 @@ public class ConfigLoader extends PropertiesLoader{
      * 
      * @return the balanced policy priority as a double
      */
-    public double getBalancedPolicy() {
+    public static double getBalancedPolicy() {
         return getDouble("policies.balanced");
     }
 
@@ -35,7 +35,7 @@ public class ConfigLoader extends PropertiesLoader{
      * 
      * @return the reservation confirmation priority as a double
      */
-    public double getReservationConfirmationPriority() {
+    public static double getReservationConfirmationPriority() {
         return getDouble("policies.reservation_confirmation");
     }
 
@@ -44,15 +44,15 @@ public class ConfigLoader extends PropertiesLoader{
      * 
      * @return the agent priority for P6 as a double
      */
-    public double getAgentPriorityP6() {
+    public static double getAgentPriorityP6() {
         return getDouble("policies.agent_priority_p6");
     }
 
-    public int getPetrinetNumber() {
+    public static int getPetrinetNumber() {
         return Integer.parseInt(config.getProperty("petrinet.number", "0"));
     }
 
-    public String getPetrinetFile () {
-        return config.getProperty("petrinet." + getpetrinetNumber());
+    public static String getPetrinetFile () {
+        return config.getProperty("petrinet." + getPetrinetNumber());
     }
 }

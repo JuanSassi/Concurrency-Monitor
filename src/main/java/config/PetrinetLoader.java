@@ -1,8 +1,8 @@
-public class PetrinetLoader extends PropertiesLoader {        
+class PetrinetLoader extends PropertiesLoader {        
     /**
      * Private constructor to prevent instantiation of this utility class.
      */
-    public PetrinetLoader() {
+    private PetrinetLoader() {
        super();
     }
 
@@ -11,7 +11,7 @@ public class PetrinetLoader extends PropertiesLoader {
      * 
      * @return an integer array representing the initial marking
      */
-    public int[] getInitialMarkingVector() {
+    public static int[] getInitialMarkingVector() {
         return getIntArray("initial_marking.vector");
     }
 
@@ -20,7 +20,7 @@ public class PetrinetLoader extends PropertiesLoader {
      * 
      * @return an integer array representing which transitions are temporal
      */
-    public int[] getTemporalTransitionsVector() {
+    public static int[] getTemporalTransitionsVector() {
         return getIntArray("temporary_transitions.vector");
     }
 
@@ -32,7 +32,7 @@ public class PetrinetLoader extends PropertiesLoader {
      * @return a 2D integer array representing the pre-incidence matrix
      * @throws RuntimeException if no rows are found or if rows have inconsistent dimensions
      */
-    public int[][] getPreMatrix() {
+    public static int[][] getPreMatrix() {
         int places = 0;
         while (petrinet.getProperty("matrix.pre." + places) != null) {
             places++;
@@ -67,7 +67,7 @@ public class PetrinetLoader extends PropertiesLoader {
      * @return a 2D integer array representing the post-incidence matrix
      * @throws RuntimeException if no rows are found or if rows have inconsistent dimensions
      */
-    public int[][] getPostMatrix() {
+    public static int[][] getPostMatrix() {
         int places = 0;
         while (petrinet.getProperty("matrix.post." + places) != null) {
             places++;
@@ -100,7 +100,7 @@ public class PetrinetLoader extends PropertiesLoader {
      * 
      * @return the number of places
      */
-    public int getNumPlaces() {
+    public static int getNumPlaces() {
         return getPreMatrix().length;
     }
 
@@ -110,7 +110,7 @@ public class PetrinetLoader extends PropertiesLoader {
      * 
      * @return the number of transitions, or 0 if the matrix is empty
      */
-    public int getNumTransitions() {
+    public static int getNumTransitions() {
         return getPreMatrix().length > 0 ? getPreMatrix()[0].length : 0;
     }
 }

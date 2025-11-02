@@ -24,4 +24,16 @@ class Matrix {
                 C[i][j] = A[i][j] - B[i][j];
         return C;
     }
+
+    public static int[][] transposed(int[][] W) {
+        int rows = W.length;
+        int cols = W[0].length;
+        int[][] Wtransposed = new int[cols][rows];
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                Wtransposed[j][i] = W[i][j];
+            }
+        }
+        return Wtransposed;
+    }
 }

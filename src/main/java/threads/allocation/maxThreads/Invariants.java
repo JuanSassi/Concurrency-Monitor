@@ -22,16 +22,7 @@ public class Invariants {
      */
     public Invariants(int[][] W) {
         this.W = W;
-        int rows = W.length;
-        int cols = W[0].length;
-        int[][] Wtransposed = new int[cols][rows];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                Wtransposed[j][i] = W[i][j];
-            }
-        }
-        this.Wt = Wtransposed;
-
+        this.Wt = Matrix.transposed(W);
         this.pInvariant = computeInvariants(Wt);
         this.tInvariant = computeInvariants(W);
     }
@@ -51,7 +42,7 @@ public class Invariants {
      * or P-invariants in the case where matrix = W^T)
      */
     public List<List<Integer>> computeInvariants(int[][] matrix) {
-        List<int[]> nullBasis=MatrixUtils.computeNullspace(matrix);
+        List<int[]> nullBasis=Nullspace.compute(matrix);
         // Limit for each coefficient in the linear combinations
         int maxCoeff = 4 ;
         Set<List<Integer>> all = new HashSet<>();
@@ -81,7 +72,6 @@ public class Invariants {
      * P-invariants represent conservative components of the Petri Net.
      */
     public void printPInvariants() {
-        pInvariant = computeInvariants(Wt);
         System.out.println("\n=================================");
         System.out.println(("P") + "- (minimal invariants found): " + pInvariant.size() + "\n");
         for(int i=0;i<pInvariant.size();i++) {
@@ -97,7 +87,6 @@ public class Invariants {
      * T-invariants represent firing sequences that return to the initial marking.
      */
     public void printTInvariants() {
-        tInvariant = computeInvariants(W);
         System.out.println("\n=================================");
         System.out.println(("T") + "- (minimal invariants found): " + tInvariant.size() + "\n");
         for(int i=0;i<tInvariant.size();i++) {
@@ -145,7 +134,7 @@ public class Invariants {
             
             if (nonNeg && anyPos) {
                 // Reduce the vector to its minimal form by dividing by the GCD
-                int g = MatrixUtils.gcdArray(combo);
+                int g = Nullspace.gcdArray(combo);
                 if (g > 0) {
                     for (int j = 0; j < combo.length; j++) {
                         combo[j] /= g;

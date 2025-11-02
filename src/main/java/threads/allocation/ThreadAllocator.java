@@ -12,9 +12,10 @@ public class ThreadAllocator {
         Pre = PetrinetLoader.getPreMatrix();
         Post = PetrinetLoader.getPostMatrix();
         m0 = PetrinetLoader.getInitialMarkingVector();
-        W = MatrixUtils.subtract(Post, Pre);
+        W = Matrix.subtract(Post, Pre);
+        
         invariants = new Invariants(W);
-        analyzer = new ClassificationOfPlaces(Pre, Post, m0, invariants);
+        analyzer = new ClassificationOfPlaces(Pre, Post, W, m0, invariants);
         tree = new ReachabilityTree(analyzer.getActionPlaces());
         responsibilities = new Responsibilities(Pre, Post, invariants.getTInvariants(), analyzer.getActionPlaces());
         

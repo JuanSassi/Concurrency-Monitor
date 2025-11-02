@@ -52,7 +52,7 @@ public class ClassificationOfPlaces {
      *             tokens produced by each transition
      * @param m0   Initial marking vector of dimension [numPlaces]
      */
-    public ClassificationOfPlaces(int[][] pre, int[][] post, int[] m0, Invariants invariants) {
+    public ClassificationOfPlaces(int[][] pre, int[][] post, int[][] W, int[] m0, Invariants invariants) {
         resourcePlaces = new HashSet<>();
         actionPlaces = new HashSet<>();
         possibleRecourse = new HashSet<>();
@@ -61,10 +61,11 @@ public class ClassificationOfPlaces {
         this.pre = pre;
         this.post = post;
         this.m0 = m0;
-        this.W = MatrixUtils.subtract(post, pre);
+        this.W = W;
         this.numPlaces = pre.length;
         this.numTransitions = pre[0].length;
         this.invariants = invariants;
+
         classifyPlaces();
         this.PAofIT = getPAofIT();
     }
@@ -83,7 +84,7 @@ public class ClassificationOfPlaces {
      *       using topological and initial marking criteria, the rest are action places
      * 
      */
-    public void classifyPlaces() {
+    private void classifyPlaces() {
         List<List<Integer>> pInvariants = invariants.getPInvariants();
         int numInvariants = pInvariants.size();
 

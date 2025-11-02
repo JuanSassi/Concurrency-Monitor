@@ -8,7 +8,7 @@ import java.util.*;
 public class ReachabilityTree {
     private PetriNet petriNet;
     private Set<Integer> actionPlaces;
-    private Set<int[]> reachableMarkings; // Marcas únicas alcanzables
+    private Set<int[]> reachableMarkings;
     private int[] markSum;
     private int maxNumThreads;
     
@@ -19,8 +19,9 @@ public class ReachabilityTree {
         this.petriNet = PetriNet.getInstance();
         this.actionPlaces = actionPlaces;
         this.reachableMarkings = new LinkedHashSet<>();
+
         buildReachabilitySet();
-        getMarkSum();
+        this.markSum = getMarkSum();
         this.maxNumThreads = getMaxNumThreads();
     }
     
@@ -75,17 +76,18 @@ public class ReachabilityTree {
         }
     }
 
-    private void getMarkSum() {
-        markSum = new int[reachableMarkings.size()];
+    private int[] getMarkSum() {
+        int[] marks = new int[reachableMarkings.size()];
         int i = 0;
         for (int[] marking : reachableMarkings) {
             int sum = 0;
             for (int tokens : marking) {
                 sum += tokens;
             }
-            markSum[i] = sum;
+            marks[i] = sum;
             i++;
         }
+        return marks;
     }
 
     /**
@@ -156,9 +158,9 @@ public class ReachabilityTree {
      * Imprime todas las marcas alcanzables
      */
     public void printMarkings() {
-        System.out.println("=== MARCAS ALCANZABLES (Plazas de Acción) ===");
-        System.out.println("Total de marcas únicas: " + reachableMarkings.size());
-        System.out.println("Maximo numero de hilos activos: " + maxNumThreads);
+        System.out.println("=== ACHIEVABLE MARKS (Action places) ===");
+        System.out.println("Total unique marks: " + reachableMarkings.size());
+        System.out.println("Maximum number of active threads: " + maxNumThreads);
         System.out.println();
         
         // Crear lista ordenada de plazas de acción para el encabezado
@@ -170,7 +172,7 @@ public class ReachabilityTree {
         for (Integer place : sortedPlaces) {
             System.out.print("P" + place + "\t");
         }
-        System.out.println("SUMA");
+        System.out.println("SUM");
         
         // Imprimir línea separadora
         System.out.print("---\t");
@@ -181,7 +183,9 @@ public class ReachabilityTree {
         
         // Imprimir marcados
         int i = 0;
+        boolean fullPrint = ConfigLoader.getFullprint();
         for (int[] marking : reachableMarkings) {
+            if (i >= 20 && !fullPrint) break;
             System.out.print("M" + i + "\t");
             for (int token : marking) {
                 System.out.print(token + "\t");

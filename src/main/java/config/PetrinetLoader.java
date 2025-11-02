@@ -1,3 +1,22 @@
+/**
+ * Configuration loader for accessing Petri net specific configuration values.
+ * This class extends PropertiesLoader to provide convenient static methods
+ * for retrieving Petri net components such as marking vectors, transition vectors,
+ * incidence matrices, and structural dimensions.
+ * 
+ * <p>The Petri net configuration is loaded from a properties file specified
+ * in the main configuration. This class provides methods to access:</p>
+ * <ul>
+ *   <li>Initial marking vectors</li>
+ *   <li>Temporal transitions vectors</li>
+ *   <li>Pre and post incidence matrices</li>
+ *   <li>Structural dimensions (number of places and transitions)</li>
+ * </ul>
+ * 
+ * @see PropertiesLoader
+ * 
+ * @author Sassi Juan Ignacio
+ */
 class PetrinetLoader extends PropertiesLoader {        
     /**
      * Private constructor to prevent instantiation of this utility class.

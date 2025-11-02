@@ -1,3 +1,16 @@
+/**
+ * Configuration loader for accessing main application configuration values.
+ * This class extends PropertiesLoader to provide convenient static methods
+ * for retrieving specific configuration properties related to execution settings,
+ * policies, and Petri net selection.
+ * 
+ * <p>All methods in this class are static and provide type-safe access to
+ * configuration values defined in the config.properties file.</p>
+ * 
+ * @see PropertiesLoader
+ * 
+ * @author Sassi Juan Ignacio
+ */
 class ConfigLoader extends PropertiesLoader{
     private ConfigLoader() {
         super();

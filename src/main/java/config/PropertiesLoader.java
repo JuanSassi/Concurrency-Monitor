@@ -2,6 +2,22 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+/**
+ * Base utility class for loading and managing configuration properties from files.
+ * This class provides the foundation for loading both main configuration and
+ * Petri net-specific configurations from properties files located in the resources folder.
+ * 
+ * <p>The class automatically loads the main configuration file (config.properties)
+ * and the appropriate Petri net configuration file during class initialization.</p>
+ * 
+ * <p>Subclasses can extend this class to provide specialized access to specific
+ * configuration values.</p>
+ * 
+ * @see ConfigLoader
+ * @see PetrinetLoader
+ * 
+ * @author Sassi Juan Ignacio
+ */
 class PropertiesLoader {
     /** Properties object holding configuration key-value pairs */
     protected static Properties config;

@@ -34,6 +34,10 @@ class ConfigLoader extends PropertiesLoader{
         return getBoolean("policies.is_balanced");
     }
 
+    public static boolean getFullprint(){
+        return getBoolean("tree.fullprint");
+    }
+
     /**
      * Gets the balanced policy priority value.
      * 

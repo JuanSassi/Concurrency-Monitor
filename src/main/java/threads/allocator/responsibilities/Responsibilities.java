@@ -77,38 +77,6 @@ public class Responsibilities {
         return false;
     }
 
-    private boolean isFork(int place) {
-        // Un fork ocurre cuando un lugar tiene múltiples transiciones de salida
-        // Revisamos la matriz POST: si el lugar produce tokens en más de una transición
-        
-        int outputTransitions = 0;
-        
-        // Recorrer todas las transiciones (columnas) para este lugar (fila)
-        for (int transition = 0; transition < pre[place].length; transition++) {
-            if (pre[place][transition] > 0) {
-                outputTransitions++;
-            }
-        }
-        
-        return outputTransitions > 1;
-    }
-
-    private boolean isJoin(int place) {
-        // Un join ocurre cuando un lugar tiene múltiples transiciones de entrada
-        // Revisamos la matriz PRE: si el lugar consume tokens de más de una transición
-        
-        int inputTransitions = 0;
-        
-        // Recorrer todas las transiciones (columnas) para este lugar (fila)
-        for (int transition = 0; transition < post[place].length; transition++) {
-            if (post[place][transition] > 0) {
-                inputTransitions++;
-            }
-        }
-        
-        return inputTransitions > 1;
-    }
-
     private void analyzeForkOrJoin () {
         for(Integer p : actionPlaces){
             if(isJoin(p)) joins.add(p);
@@ -217,4 +185,49 @@ public class Responsibilities {
             System.out.println("Join places: " + formattedJoins);
         }
     }
+
+    public List<List<Integer>> getSegments(){
+        return segments;
+    }
+
+    private boolean isFork(int place) {
+        // Un fork ocurre cuando un lugar tiene múltiples transiciones de salida
+        // Revisamos la matriz POST: si el lugar produce tokens en más de una transición
+        
+        int outputTransitions = 0;
+        
+        // Recorrer todas las transiciones (columnas) para este lugar (fila)
+        for (int transition = 0; transition < pre[place].length; transition++) {
+            if (pre[place][transition] > 0) {
+                outputTransitions++;
+            }
+        }
+        
+        return outputTransitions > 1;
+    }
+
+    private boolean isJoin(int place) {
+        // Un join ocurre cuando un lugar tiene múltiples transiciones de entrada
+        // Revisamos la matriz PRE: si el lugar consume tokens de más de una transición
+        
+        int inputTransitions = 0;
+        
+        // Recorrer todas las transiciones (columnas) para este lugar (fila)
+        for (int transition = 0; transition < post[place].length; transition++) {
+            if (post[place][transition] > 0) {
+                inputTransitions++;
+            }
+        }
+        
+        return inputTransitions > 1;
+    }
+
+    public List<Integer> getForkPlaces(){
+        return forks;
+    }
+
+    public List<Integer> getJoinPlaces(){
+        return joins;
+    }
+
 }

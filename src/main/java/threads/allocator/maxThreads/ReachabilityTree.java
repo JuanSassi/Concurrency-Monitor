@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.ArrayList;
 
 /**
  * Clase que representa un grafo de marcado para plazas de acción.
@@ -191,6 +192,87 @@ public class ReachabilityTree {
                 System.out.print(token + "\t");
             }
             System.out.println(markSum[i]);
+            i++;
+        }
+    }
+
+    /**
+     * Imprime las marcas alcanzables mostrando solo las plazas especificadas en el segmento
+     * @param segment Lista de índices de transiciones del segmento
+     * @param segmentPlaces Lista de plazas de acción del segmento
+     */
+    public void printSegment(List<Integer> segment, List<Integer> segmentPlaces) {
+        if (segmentPlaces.isEmpty()) {
+            System.out.println("=== SEGMENT MARKS (Transitions: " + segment + ") ===");
+            System.out.println("It hasn't action place neither forks and joins in this segment");
+            System.out.println("Maximum number of active threads in segment: " + 1);
+            System.out.println();
+            return;
+        }
+        
+        // Calcular el máximo número de hilos para este segmento
+        int maxThreadsSegment = 0;
+        List<Integer> allSortedPlaces = new ArrayList<>(actionPlaces);
+        Collections.sort(allSortedPlaces);
+        
+        for (int[] marking : reachableMarkings) {
+            int segmentSum = 0;
+            for (Integer segmentPlace : segmentPlaces) {
+                int markingIndex = allSortedPlaces.indexOf(segmentPlace);
+                if (markingIndex >= 0 && markingIndex < marking.length) {
+                    segmentSum += marking[markingIndex];
+                }
+            }
+            if (segmentSum > maxThreadsSegment) {
+                maxThreadsSegment = segmentSum;
+            }
+        }
+        
+        System.out.println("=== SEGMENT MARKS (Transitions: " + segment + ") ===");
+        System.out.println("Action places in segment (without forks and joins): " + segmentPlaces);
+        System.out.println("Maximum number of active threads in segment: " + maxThreadsSegment);
+        System.out.println();
+        
+        // Ordenar las plazas del segmento
+        Collections.sort(segmentPlaces);
+        
+        // Imprimir encabezado
+        System.out.print("M\t");
+        for (Integer place : segmentPlaces) {
+            System.out.print("P" + place + "\t");
+        }
+        System.out.println("SUM");
+        
+        // Imprimir línea separadora
+        System.out.print("---\t");
+        for (int j = 0; j < segmentPlaces.size(); j++) {
+            System.out.print("---\t");
+        }
+        System.out.println("----");
+        
+        // Imprimir marcados filtrados
+        int i = 0;
+        boolean fullPrint = ConfigLoader.getFullprint();
+        for (int[] marking : reachableMarkings) {
+            if (i >= 20 && !fullPrint) break;
+            
+            System.out.print("M" + i + "\t");
+            int segmentSum = 0;
+            
+            // Imprimir solo los tokens de las plazas del segmento
+            for (Integer segmentPlace : segmentPlaces) {
+                // Encontrar el índice de esta plaza en el marking
+                int markingIndex = allSortedPlaces.indexOf(segmentPlace);
+                if (markingIndex >= 0 && markingIndex < marking.length) {
+                    int tokens = marking[markingIndex];
+                    System.out.print(tokens + "\t");
+                    segmentSum += tokens;
+                } else {
+                    System.out.print("0\t");
+                }
+            }
+            
+            System.out.println(segmentSum);
             i++;
         }
     }

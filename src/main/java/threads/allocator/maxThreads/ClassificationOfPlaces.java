@@ -170,11 +170,12 @@ public class ClassificationOfPlaces {
     /**
      * Prints the places that are part of each T-Invariant.
      */
-    public void printPIofIT() {
+    public String logPIofIT() {
+        String log = "";
         List<List<Integer>> tInvariants = invariants.getTInvariants();
         
-        System.out.println("\n=================================");
-        System.out.println("Set of places associated with each Transition Invariant (PI of TI) \n");
+        log += "\n=================================";
+        log += "\nSet of places associated with each Transition Invariant (PI of TI) \n";
         
         for (int i = 0; i < tInvariants.size(); i++) {
             List<Integer> tInv = tInvariants.get(i);
@@ -200,21 +201,22 @@ public class ClassificationOfPlaces {
                     .map(p -> "P" + p)
                     .toList();
             
-            System.out.println("TI " + (i + 1) + ": " + placeNames);
+            log += "\nTI " + (i + 1) + ": " + placeNames;
         }
+        return log;
     }
 
     /**
      * Prints the action places of each T-Invariant.
      */
-    public void printPAofIT() {
-        System.out.println("\n=================================");
-        System.out.println("Set of action places associated with each Transition Invariant (PA of TI) \n");
+    public String logPAofIT() {
+        String log = "\n=================================";
+        log += "\nSet of action places associated with each Transition Invariant (PA of TI) \n";
         
         // Validar que PAofIT esté calculado
         if (PAofIT == null || PAofIT.isEmpty()) {
-            System.out.println("No action places calculated yet. Please run classifyPlaces() first.\n");
-            return;
+            log += "\nNo action places calculated yet. Please run classifyPlaces() first.\n";
+            return log;
         }
         
         for (int i = 0; i < PAofIT.size(); i++) {
@@ -223,23 +225,25 @@ public class ClassificationOfPlaces {
                     .map(p -> "P" + p)
                     .toList();
             
-            System.out.println("TI " + (i + 1) + ": " + actionPlaceNames);
+            log += "\nTI " + (i + 1) + ": " + actionPlaceNames;
         }
+        return log;
     }
 
     /** 
      * Print sets of action places associated with all Transition Invariants
      */
-    public void printPA() {
-        System.out.println("\n=================================");
-        System.out.println("Set of action places associated with all Transition Invariants (PA) \n");
+    public String logPA() {
+        String log = "\n=================================";
+        log += "\nSet of action places associated with all Transition Invariants (PA) \n";
             // Convert indices to "P0, P1, P2, ..." format
         List<String> actionPlaceNames = actionPlaces.stream()
                 .sorted()  // Sort numerically
                 .map(p -> "P" + p)
                 .toList();
         
-        System.out.println("Action places: " + actionPlaceNames + "\n");
+        log += "\nAction places: " + actionPlaceNames + "\n";
+        return log;
     }
 
     public Set<Integer> getActionPlaces() {

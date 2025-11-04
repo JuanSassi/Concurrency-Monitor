@@ -26,46 +26,49 @@ public class ThreadAllocator {
         responsibilities = new Responsibilities(Pre, Post, invariants.getTInvariants(), analyzer.getActionPlaces());
     }
 
-    public void algorithm1() {
+    public String algorithm1() {
         // Algorithm for determining maximum simultaneous active threads (4.1)
-        System.out.println("╔═══════════════════════════════════════════════════════════════════════╗");
-        System.out.println("║  ALGORITHM FOR DETERMINING MAXIMUM SIMULTANEOUS ACTIVE THREADS (4.1)  ║");
-        System.out.println("╚═══════════════════════════════════════════════════════════════════════╝");
-        
-        // 1. Obtain the transition invariants of the PN
-        invariants.printTransitionsOfTI();
+        String log = "\n╔═══════════════════════════════════════════════════════════════════════╗\n" +
+                       "║  ALGORITHM FOR DETERMINING MAXIMUM SIMULTANEOUS ACTIVE THREADS (4.1)  ║\n" +
+                       "╚═══════════════════════════════════════════════════════════════════════╝";
 
+        // 1. Obtain the transition invariants of the PN
+        log += invariants.logTransitionsOfTI();
+        
         // 2. Obtain the set of places associated with the T-invariant under analysis
-        analyzer.printPIofIT();
+        log += analyzer.logPIofIT();
 
         // 3. Determine the action-related places of each T-invariant
-        analyzer.printPAofIT();
+        log += analyzer.logPAofIT();
 
         // 4. 
-        analyzer.printPA();
-        tree.printMarkings();
+        log += analyzer.logPA();
+        log += tree.logMaxThreads();
+        return log;
     }
 
-    public void algorithm2(){
+    public String algorithm2(){
         // Algorithm for determining thread responsibility (4.2)
-        System.out.println("╔═════════════════════════════════════════════════════════╗");
-        System.out.println("║  ALGORITHM FOR DETERMINING THREAD RESPONSIBILITY (4.2)  ║");
-        System.out.println("╚═════════════════════════════════════════════════════════╝");
+        String log = "\n╔═════════════════════════════════════════════════════════╗" +
+                     "\n║  ALGORITHM FOR DETERMINING THREAD RESPONSIBILITY (4.2)  ║" + 
+                     "\n╚═════════════════════════════════════════════════════════╝\n";
 
-        responsibilities.printAnalysis();
+        log += responsibilities.logAnalysis();
+        return log;
     }
 
-    public void algorithm3() {
+    public String algorithm3() {
         // Algorithm for determining maximum threads per segment (4.3)
-        System.out.println("╔═══════════════════════════════════════════════════════════════╗");
-        System.out.println("║  ALGORITHM FOR DETERMINING MAXIMOM THREADS PER SEGMENT (4.3)  ║");
-        System.out.println("╚═══════════════════════════════════════════════════════════════╝");
+        String log = "\n╔═══════════════════════════════════════════════════════════════╗" +
+                     "\n║  ALGORITHM FOR DETERMINING MAXIMOM THREADS PER SEGMENT (4.3)  ║" +
+                     "\n╚═══════════════════════════════════════════════════════════════╝";
         
         List<List<Integer>> segments = responsibilities.getSegments();
         for(List<Integer> segment : segments){
             List<Integer> segmentPlaces = getPlacesFromSegment(segment);
-            tree.printSegment(segment, segmentPlaces);
+            log += tree.logThreadsPerSegment(segment, segmentPlaces);
         }      
+        return log;
     }
 
     private List<Integer> getPlacesFromSegment(List<Integer> segment) {
@@ -89,5 +92,23 @@ public class ThreadAllocator {
         List<Integer> segmentPlaces = new ArrayList<>(places);
         Collections.sort(segmentPlaces);
         return segmentPlaces;
+    }
+
+    public String getLogMarkings(){
+        return tree.logMarkings();
+    }
+
+    public String getLogSegments(){
+        // Algorithm for determining maximum threads per segment (4.3)
+        String log = "\n╔═══════════════════════════════════════════════════════════════╗" +
+                     "\n║  ALGORITHM FOR DETERMINING MAXIMOM THREADS PER SEGMENT (4.3)  ║" +
+                     "\n╚═══════════════════════════════════════════════════════════════╝";
+        
+        List<List<Integer>> segments = responsibilities.getSegments();
+        for(List<Integer> segment : segments){
+            List<Integer> segmentPlaces = getPlacesFromSegment(segment);
+            log += tree.logSegment(segment, segmentPlaces);
+        }      
+        return log;
     }
 }

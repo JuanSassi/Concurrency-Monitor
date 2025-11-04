@@ -7,6 +7,20 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         ThreadAllocator allocator = new ThreadAllocator();
+        Log algorithms = new Log("algorithms");
+        
+        String algorithm1 = allocator.algorithm1();
+        algorithms.write(algorithm1);
+        String algorithm2 = allocator.algorithm2();
+        algorithms.write(algorithm2);
+        String algorithm3 = allocator.algorithm3();
+        algorithms.write(algorithm3);
+
+        Log tree = new Log("reachabillyTree");
+        tree.write(allocator.getLogMarkings());
+        Log treePerSegment = new Log("treePerSegment");
+        treePerSegment.write(allocator.getLogSegments());
+        
         /*ThreadsHandler handler = new ThreadsHandler();
         
         try {

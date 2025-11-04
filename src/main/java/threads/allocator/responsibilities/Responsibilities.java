@@ -146,44 +146,45 @@ public class Responsibilities {
         segments.addAll(uniqueSegments);
     }
 
-    public void printAnalysis() {
-        System.out.println("=================================");
-        System.out.println("THREADS RESPONSIBILITY");
-        System.out.println("=================================");
+    public String logAnalysis() {
+        String log ="\n=================================";
+        log +="\nTHREADS RESPONSIBILITY";
+        log +="\n=================================";
         for (int i = 0; i < segments.size(); i++) {
             // Formatear cada segmento con "T" antes de cada número
             List<String> formattedSegment = new ArrayList<>();
             for (Integer t : segments.get(i)) {
                 formattedSegment.add("T" + t);
             }
-            System.out.println("Segment " + (i + 1) + ": " + formattedSegment);
+            log +="\nSegment " + (i + 1) + ": " + formattedSegment;
         }
         
-        System.out.println("\n=================================");
-        System.out.println("FORKS");
+        log +="\n=================================";
+        log +="\nFORKS";
         if (forks.isEmpty()) {
-            System.out.println("No forks found.");
+            log +="\nNo forks found.";
         } else {
             // Formatear forks con "P" antes de cada número
             List<String> formattedForks = new ArrayList<>();
             for (Integer p : forks) {
                 formattedForks.add("P" + p);
             }
-            System.out.println("Fork places: " + formattedForks);
+            log +="\nFork places: " + formattedForks;
         }
         
-        System.out.println("\n=================================");
-        System.out.println("JOINS");
+        log +="\n=================================";
+        log +="\nJOINS";
         if (joins.isEmpty()) {
-            System.out.println("No joins found.");
+            log +="\nNo joins found.";
         } else {
             // Formatear joins con "P" antes de cada número
             List<String> formattedJoins = new ArrayList<>();
             for (Integer p : joins) {
                 formattedJoins.add("P" + p);
             }
-            System.out.println("Join places: " + formattedJoins);
+            log +="\nJoin places: " + formattedJoins;
         }
+        return log;
     }
 
     public List<List<Integer>> getSegments(){

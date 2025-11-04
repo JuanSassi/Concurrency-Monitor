@@ -154,60 +154,62 @@ public class ReachabilityTree {
     public int getNumReachableMarkings() {
         return reachableMarkings.size();
     }
+
+    public String logMaxThreads() {
+        String log = "\n=== ACHIEVABLE MARKS (Action places) ===";
+        log += "\nTotal unique marks: " + reachableMarkings.size();
+        log += "\nMaximum number of active threads: " + maxNumThreads +"\n";
+        log += "\nThe Reachabilly tree is complete at reachabillyTree.log";
+        return log;
+    }
     
     /**
      * Imprime todas las marcas alcanzables
      */
-    public void printMarkings() {
-        System.out.println("=== ACHIEVABLE MARKS (Action places) ===");
-        System.out.println("Total unique marks: " + reachableMarkings.size());
-        System.out.println("Maximum number of active threads: " + maxNumThreads);
-        System.out.println();
+    public String logMarkings() {
+        String log = "\n=== ACHIEVABLE MARKS (Action places) ===";
+        log += "\nTotal unique marks: " + reachableMarkings.size();
+        log += "\nMaximum number of active threads: " + maxNumThreads +"\n";
         
         // Crear lista ordenada de plazas de acción para el encabezado
         List<Integer> sortedPlaces = new ArrayList<>(actionPlaces);
         Collections.sort(sortedPlaces);
         
         // Imprimir encabezado
-        System.out.print("M\t");
+        log += "\nM\t";
         for (Integer place : sortedPlaces) {
-            System.out.print("P" + place + "\t");
+            log += "P" + place + "\t";
         }
-        System.out.println("SUM");
+        log += "SUM\n";
         
         // Imprimir línea separadora
-        System.out.print("---\t");
-        for (int j = 0; j < sortedPlaces.size(); j++) {
-            System.out.print("---\t");
+        for (int j = 0; j < sortedPlaces.size()+1; j++) {
+            log += "---\t";
         }
-        System.out.println("----");
+        log += "----\n";
         
         // Imprimir marcados
         int i = 0;
         boolean fullPrint = ConfigLoader.getFullprint();
         for (int[] marking : reachableMarkings) {
             if (i >= 20 && !fullPrint) break;
-            System.out.print("M" + i + "\t");
+            log += "M" + i + "\t";
             for (int token : marking) {
-                System.out.print(token + "\t");
+                log += token + "\t";
             }
-            System.out.println(markSum[i]);
+            log += markSum[i]+"\n";
             i++;
         }
+        return log;
     }
 
-    /**
-     * Imprime las marcas alcanzables mostrando solo las plazas especificadas en el segmento
-     * @param segment Lista de índices de transiciones del segmento
-     * @param segmentPlaces Lista de plazas de acción del segmento
-     */
-    public void printSegment(List<Integer> segment, List<Integer> segmentPlaces) {
+    public String logThreadsPerSegment(List<Integer> segment, List<Integer> segmentPlaces) {
+        String log = "";
         if (segmentPlaces.isEmpty()) {
-            System.out.println("=== SEGMENT MARKS (Transitions: " + segment + ") ===");
-            System.out.println("It hasn't action place neither forks and joins in this segment");
-            System.out.println("Maximum number of active threads in segment: " + 1);
-            System.out.println();
-            return;
+            log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
+            log += "\nIt hasn't action place neither forks and joins in this segment";
+            log += "\nMaximum number of active threads in segment: " + 1 +"\n";
+            return log;
         }
         
         // Calcular el máximo número de hilos para este segmento
@@ -228,27 +230,64 @@ public class ReachabilityTree {
             }
         }
         
-        System.out.println("=== SEGMENT MARKS (Transitions: " + segment + ") ===");
-        System.out.println("Action places in segment (without forks and joins): " + segmentPlaces);
-        System.out.println("Maximum number of active threads in segment: " + maxThreadsSegment);
-        System.out.println();
+        log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
+        log += "\nAction places in segment (without forks and joins): " + segmentPlaces;
+        log += "\nMaximum number of active threads in segment: " + maxThreadsSegment + "\n";
+        return log;
+    }
+
+    /**
+     * Imprime las marcas alcanzables mostrando solo las plazas especificadas en el segmento
+     * @param segment Lista de índices de transiciones del segmento
+     * @param segmentPlaces Lista de plazas de acción del segmento
+     */
+    public String logSegment(List<Integer> segment, List<Integer> segmentPlaces) {
+        String log = "";
+        if (segmentPlaces.isEmpty()) {
+            log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
+            log += "\nIt hasn't action place neither forks and joins in this segment";
+            log += "\nMaximum number of active threads in segment: " + 1 +"\n";
+            return log;
+        }
+        
+        // Calcular el máximo número de hilos para este segmento
+        int maxThreadsSegment = 0;
+        List<Integer> allSortedPlaces = new ArrayList<>(actionPlaces);
+        Collections.sort(allSortedPlaces);
+        
+        for (int[] marking : reachableMarkings) {
+            int segmentSum = 0;
+            for (Integer segmentPlace : segmentPlaces) {
+                int markingIndex = allSortedPlaces.indexOf(segmentPlace);
+                if (markingIndex >= 0 && markingIndex < marking.length) {
+                    segmentSum += marking[markingIndex];
+                }
+            }
+            if (segmentSum > maxThreadsSegment) {
+                maxThreadsSegment = segmentSum;
+            }
+        }
+        
+        log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
+        log += "\nAction places in segment (without forks and joins): " + segmentPlaces;
+        log += "\nMaximum number of active threads in segment: " + maxThreadsSegment + "\n";
         
         // Ordenar las plazas del segmento
         Collections.sort(segmentPlaces);
         
         // Imprimir encabezado
-        System.out.print("M\t");
+        log += "\nM\t";
         for (Integer place : segmentPlaces) {
-            System.out.print("P" + place + "\t");
+            log += "P" + place + "\t";
         }
-        System.out.println("SUM");
+        log += "SUM\n";
         
         // Imprimir línea separadora
-        System.out.print("---\t");
+        log += "---\t";
         for (int j = 0; j < segmentPlaces.size(); j++) {
-            System.out.print("---\t");
+            log += "---\t";
         }
-        System.out.println("----");
+        log += "----\n";
         
         // Imprimir marcados filtrados
         int i = 0;
@@ -256,7 +295,7 @@ public class ReachabilityTree {
         for (int[] marking : reachableMarkings) {
             if (i >= 20 && !fullPrint) break;
             
-            System.out.print("M" + i + "\t");
+            log += "M" + i + "\t";
             int segmentSum = 0;
             
             // Imprimir solo los tokens de las plazas del segmento
@@ -265,15 +304,16 @@ public class ReachabilityTree {
                 int markingIndex = allSortedPlaces.indexOf(segmentPlace);
                 if (markingIndex >= 0 && markingIndex < marking.length) {
                     int tokens = marking[markingIndex];
-                    System.out.print(tokens + "\t");
+                    log += tokens + "\t";
                     segmentSum += tokens;
                 } else {
-                    System.out.print("0\t");
+                    log += "0\t";
                 }
             }
             
-            System.out.println(segmentSum);
+            log += segmentSum + "\n";
             i++;
         }
+        return log;
     }
 }

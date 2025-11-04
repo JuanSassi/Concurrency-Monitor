@@ -217,10 +217,10 @@ public class Invariants {
     /**
      * Prints the transitions that are part of each T-Invariant.
      */
-    public void printTransitionsOfTI() {
-        
-        System.out.println("\n=================================");
-        System.out.println("T-Invariant Transitions\n");
+    public String logTransitionsOfTI() {
+        String log = "";
+        log += "\n=================================";
+        log += "\nT-Invariant Transitions\n";
         
         for (int i = 0; i < tInvariant.size(); i++) {
             List<Integer> tInv = tInvariant.get(i);
@@ -233,7 +233,8 @@ public class Invariants {
                 }
             }
             
-            System.out.println("y" + (i + 1) + ": " + transitionNames);
+            log += "\ny" + (i + 1) + ": " + transitionNames;
         }
+        return log;
     }
 }

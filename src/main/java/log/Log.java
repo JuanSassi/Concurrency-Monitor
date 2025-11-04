@@ -6,9 +6,22 @@ public class Log {
     private String filePath;
     private DateTimeFormatter formatter;
     
-    public Log(String filePath) {
+    public Log(String fileName) {
         this.formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        this.filePath = getAvailableFilePath(filePath);
+        
+        // Crear directorio log/ si no existe
+        File logDir = new File("log");
+        if (!logDir.exists()) {
+            logDir.mkdirs();
+        }
+        
+        // Construir ruta completa: log/nombreArchivo.log
+        String fullPath = "log" + File.separator + fileName;
+        if (!fileName.endsWith(".log")) {
+            fullPath += ".log";
+        }
+        
+        this.filePath = getAvailableFilePath(fullPath);
         createLogFile();
     }
     
@@ -46,7 +59,6 @@ public class Log {
         try {
             File file = new File(filePath);
             file.createNewFile();
-            write("=== Log iniciado ===");
         } catch (IOException e) {
             System.err.println("Error al crear archivo de log: " + e.getMessage());
         }

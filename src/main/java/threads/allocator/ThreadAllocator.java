@@ -13,6 +13,9 @@ public class ThreadAllocator {
     private ClassificationOfPlaces analyzer;
     private ReachabilityTree tree;
     private Responsibilities responsibilities;
+    private Log algorithmsLog;
+    private Log treeLog;
+    private Log treePerSegmentLog;
 
     public ThreadAllocator(){
         Pre = PetrinetLoader.getPreMatrix();
@@ -24,6 +27,12 @@ public class ThreadAllocator {
         analyzer = new ClassificationOfPlaces(Pre, Post, W, m0, invariants);
         tree = new ReachabilityTree(analyzer.getActionPlaces());
         responsibilities = new Responsibilities(Pre, Post, invariants.getTInvariants(), analyzer.getActionPlaces());
+
+        this.algorithmsLog = new Log("algorithms");
+        this.treeLog = new Log("reachabilityTree");
+        this.treePerSegmentLog = new Log("treePerSegment");
+
+        logAll();
     }
 
     public String algorithm1() {
@@ -100,15 +109,20 @@ public class ThreadAllocator {
 
     public String getLogSegments(){
         // Algorithm for determining maximum threads per segment (4.3)
-        String log = "\n╔═══════════════════════════════════════════════════════════════╗" +
-                     "\n║  ALGORITHM FOR DETERMINING MAXIMOM THREADS PER SEGMENT (4.3)  ║" +
-                     "\n╚═══════════════════════════════════════════════════════════════╝";
-        
+        String log = "";
         List<List<Integer>> segments = responsibilities.getSegments();
         for(List<Integer> segment : segments){
             List<Integer> segmentPlaces = getPlacesFromSegment(segment);
             log += tree.logSegment(segment, segmentPlaces);
         }      
         return log;
+    }
+
+    public void logAll(){
+        algorithmsLog.write(algorithm1());
+        algorithmsLog.write(algorithm2());
+        algorithmsLog.write(algorithm3());
+        treeLog.write(getLogMarkings());
+        treePerSegmentLog.write(getLogSegments());
     }
 }

@@ -11,7 +11,9 @@ import java.util.Properties;
  * and the appropriate Petri net configuration file during class initialization.</p>
  * 
  * <p>Subclasses can extend this class to provide specialized access to specific
- * configuration values.</p>
+ * configuration values through type-safe getter methods.</p>
+ * 
+ * <p>Configuration files must be located in the classpath resources directory.</p>
  * 
  * @see ConfigLoader
  * @see PetrinetLoader
@@ -21,16 +23,20 @@ import java.util.Properties;
 class PropertiesLoader {
     /** Properties object holding configuration key-value pairs */
     protected static Properties config;
+
     /** Properties object holding petri net specific configurations */
     protected static Properties petrinet;
+
     /** Name of the petri net properties file to load */
     private static String petrinetFile;
+
     /** Name of the main configuration file */
     private static String configFile;
 
     /**
      * Static initialization block that loads the configuration files
-     * when the class is first loaded.
+     * when the class is first loaded. This ensures configurations are
+     * available before any subclass methods are called.
      */
     static {
         configFile = "config.properties";
@@ -39,11 +45,11 @@ class PropertiesLoader {
     }
 
     /**
-     * Private constructor to prevent instantiation of this utility class.
+     * Protected constructor to prevent direct instantiation of this utility class.
+     * Subclasses can call this constructor, but the class is primarily designed
+     * for static method access.
      */
-    protected PropertiesLoader() {
-
-    }
+    protected PropertiesLoader() {}
 
     /**
      * Loads the main configuration from config.properties located in resources.
@@ -68,11 +74,16 @@ class PropertiesLoader {
     }
     
     /**
-     * Loads the petri net configuration based on the petrinet.number property.
-     * This method determines which petri net file to load and loads it into
+     * Loads the Petri net configuration based on the petrinet.number property.
+     * This method determines which Petri net file to load and loads it into
      * the petrinet Properties object.
      * 
-     * @throws RuntimeException if the petri net file cannot be found or read
+     * <p>The method reads "petrinet.number" from the main config to determine
+     * which Petri net configuration to load, then loads the file specified
+     * by the "petrinet.{number}" property.</p>
+     * 
+     * @throws RuntimeException if the petri net file cannot be found, if the
+     *         petrinet.number property is invalid, or if the file cannot be read
      */
     private static void loadPetrinet() {
         try {
@@ -103,7 +114,7 @@ class PropertiesLoader {
     }
 
     /**
-     * Retrieves a boolean value from the configuration.
+     * Retrieves a boolean value from the main configuration.
      * Only accepts "true" or "false" (case-insensitive) as valid values.
      * 
      * @param key the configuration key to retrieve
@@ -127,7 +138,8 @@ class PropertiesLoader {
     }
 
     /**
-     * Retrieves an integer value from the configuration.
+     * Retrieves an integer value from the main configuration.
+     * Whitespace in the property value is automatically trimmed.
      * 
      * @param key the configuration key to retrieve
      * @return the integer value associated with the key
@@ -146,7 +158,8 @@ class PropertiesLoader {
     }
 
     /**
-     * Retrieves a double value from the configuration.
+     * Retrieves a double value from the main configuration.
+     * Whitespace in the property value is automatically trimmed.
      * 
      * @param key the configuration key to retrieve
      * @return the double value associated with the key
@@ -165,8 +178,9 @@ class PropertiesLoader {
     }
 
     /**
-     * Retrieves an integer array from the petri net configuration.
+     * Retrieves an integer array from the Petri net configuration.
      * Values should be comma-separated in the properties file.
+     * Whitespace around values is automatically trimmed.
      * 
      * @param key the configuration key to retrieve
      * @return an array of integers parsed from the comma-separated value

@@ -7,6 +7,7 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         ThreadAllocator allocator = new ThreadAllocator();
+        allocator.logAllocation();
         
         /*ThreadsHandler handler = new ThreadsHandler();
         

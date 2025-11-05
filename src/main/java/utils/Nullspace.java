@@ -13,14 +13,26 @@ import java.util.*;
  */
 class Nullspace {
     /**
+     * Private constructor to prevent instantiation of this utility class.
+     */
+    private Nullspace() {
+        // Utility class, no instances allowed
+    }
+
+    /**
      * Inner class representing rational numbers with exact precision.
      * Uses long integer arithmetic to avoid rounding errors that would occur
      * with floating-point arithmetic. All rationals are automatically reduced
      * to canonical form (lowest terms with positive denominator).
+     * 
+     * <p>This class is essential for exact Gaussian elimination, as it prevents
+     * the accumulation of floating-point errors that would compromise the
+     * accuracy of the nullspace computation.</p>
      */
     static class Rational {
         /** The numerator of the rational number */
         long num;
+        
         /** The denominator of the rational number (always positive after construction) */
         long den;
 

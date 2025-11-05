@@ -203,16 +203,11 @@ public class ReachabilityTree {
         return log;
     }
 
-    public String logThreadsPerSegment(List<Integer> segment, List<Integer> segmentPlaces) {
-        String log = "";
+    public int calculateMaxThreadsInSegment(List<Integer> segmentPlaces) {
         if (segmentPlaces.isEmpty()) {
-            log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
-            log += "\nIt hasn't action place neither forks and joins in this segment";
-            log += "\nMaximum number of active threads in segment: " + 1 +"\n";
-            return log;
+            return 1;
         }
         
-        // Calcular el máximo número de hilos para este segmento
         int maxThreadsSegment = 0;
         List<Integer> allSortedPlaces = new ArrayList<>(actionPlaces);
         Collections.sort(allSortedPlaces);
@@ -230,9 +225,21 @@ public class ReachabilityTree {
             }
         }
         
+        return maxThreadsSegment;
+    }
+
+    public String logThreadsPerSegment(List<Integer> segment, List<Integer> segmentPlaces) {
+        String log = "";
+        int maxThreadsSegment = calculateMaxThreadsInSegment(segmentPlaces);
+
         log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
-        log += "\nAction places in segment (without forks and joins): " + segmentPlaces;
+        if (segmentPlaces.isEmpty()) {
+            log += "\nIt hasn't action place neither forks and joins in this segment";
+        } else {
+            log += "\nAction places in segment (without forks and joins): " + segmentPlaces;
+        }
         log += "\nMaximum number of active threads in segment: " + maxThreadsSegment + "\n";
+        
         return log;
     }
 

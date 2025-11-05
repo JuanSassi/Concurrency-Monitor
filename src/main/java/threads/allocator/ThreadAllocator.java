@@ -16,26 +16,26 @@ public class ThreadAllocator {
     private Log algorithmsLog;
     private Log treeLog;
     private Log treePerSegmentLog;
+    private List<List<Integer>> segments;
 
     public ThreadAllocator(){
-        Pre = PetrinetLoader.getPreMatrix();
-        Post = PetrinetLoader.getPostMatrix();
-        m0 = PetrinetLoader.getInitialMarkingVector();
-        W = Matrix.subtract(Post, Pre);
+        this.Pre = PetrinetLoader.getPreMatrix();
+        this.Post = PetrinetLoader.getPostMatrix();
+        this.m0 = PetrinetLoader.getInitialMarkingVector();
+        this.W = Matrix.subtract(Post, Pre);
         
-        invariants = new Invariants(W);
-        analyzer = new ClassificationOfPlaces(Pre, Post, W, m0, invariants);
-        tree = new ReachabilityTree(analyzer.getActionPlaces());
-        responsibilities = new Responsibilities(Pre, Post, invariants.getTInvariants(), analyzer.getActionPlaces());
+        this.invariants = new Invariants(W);
+        this.analyzer = new ClassificationOfPlaces(Pre, Post, W, m0, invariants);
+        this.tree = new ReachabilityTree(analyzer.getActionPlaces());
+        this.responsibilities = new Responsibilities(Pre, Post, invariants.getTInvariants(), analyzer.getActionPlaces());
 
         this.algorithmsLog = new Log("algorithms");
         this.treeLog = new Log("reachabilityTree");
         this.treePerSegmentLog = new Log("treePerSegment");
-
-        logAll();
+        this.segments = new ArrayList<>();
     }
 
-    public String algorithm1() {
+    private String algorithm1() {
         // Algorithm for determining maximum simultaneous active threads (4.1)
         String log = "\n╔═══════════════════════════════════════════════════════════════════════╗\n" +
                        "║  ALGORITHM FOR DETERMINING MAXIMUM SIMULTANEOUS ACTIVE THREADS (4.1)  ║\n" +
@@ -56,7 +56,7 @@ public class ThreadAllocator {
         return log;
     }
 
-    public String algorithm2(){
+    private String algorithm2(){
         // Algorithm for determining thread responsibility (4.2)
         String log = "\n╔═════════════════════════════════════════════════════════╗" +
                      "\n║  ALGORITHM FOR DETERMINING THREAD RESPONSIBILITY (4.2)  ║" + 
@@ -66,13 +66,13 @@ public class ThreadAllocator {
         return log;
     }
 
-    public String algorithm3() {
+    private String algorithm3() {
         // Algorithm for determining maximum threads per segment (4.3)
         String log = "\n╔═══════════════════════════════════════════════════════════════╗" +
                      "\n║  ALGORITHM FOR DETERMINING MAXIMOM THREADS PER SEGMENT (4.3)  ║" +
                      "\n╚═══════════════════════════════════════════════════════════════╝";
         
-        List<List<Integer>> segments = responsibilities.getSegments();
+        segments = responsibilities.getSegments();
         for(List<Integer> segment : segments){
             List<Integer> segmentPlaces = getPlacesFromSegment(segment);
             log += tree.logThreadsPerSegment(segment, segmentPlaces);
@@ -103,14 +103,13 @@ public class ThreadAllocator {
         return segmentPlaces;
     }
 
-    public String getLogMarkings(){
+    private String getLogMarkings(){
         return tree.logMarkings();
     }
 
-    public String getLogSegments(){
+    private String getLogSegments(){
         // Algorithm for determining maximum threads per segment (4.3)
         String log = "";
-        List<List<Integer>> segments = responsibilities.getSegments();
         for(List<Integer> segment : segments){
             List<Integer> segmentPlaces = getPlacesFromSegment(segment);
             log += tree.logSegment(segment, segmentPlaces);
@@ -118,11 +117,28 @@ public class ThreadAllocator {
         return log;
     }
 
-    public void logAll(){
+    public void logAllocation(){
         algorithmsLog.write(algorithm1());
         algorithmsLog.write(algorithm2());
         algorithmsLog.write(algorithm3());
         treeLog.write(getLogMarkings());
         treePerSegmentLog.write(getLogSegments());
+    }
+
+    public int maxActiveThreads() {
+        return tree.getMaxNumThreads();
+    }
+
+    public List<List<Integer>> getSegments() {
+        return segments;
+    }
+
+    public List<Integer> getThreadsPerSegment() {
+        List<Integer> maxThreadsPerSegment = new ArrayList<>();
+        for(List<Integer> segment : segments){
+            List<Integer> segmentPlaces = getPlacesFromSegment(segment);
+            maxThreadsPerSegment.add(tree.calculateMaxThreadsInSegment(segmentPlaces));
+        }
+        return maxThreadsPerSegment;
     }
 }

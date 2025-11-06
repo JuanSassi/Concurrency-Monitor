@@ -12,7 +12,6 @@ build.gradle.backup
 
 # Java
 *.class
-*.jar
 *.war
 *.ear
 *.nar

@@ -1,3 +1,6 @@
+import java.util.Set;
+import java.util.HashSet;
+
 /**
  * Configuration loader for accessing main application configuration values.
  * This class extends PropertiesLoader to provide convenient static methods
@@ -32,58 +35,46 @@ class ConfigLoader extends PropertiesLoader{
     }
 
     /**
-     * Checks if the balanced policy is enabled.
-     * This value is read from the "policies.is_balanced" property.
-     * 
-     * @return true if balanced policy is enabled, false otherwise
-     * @throws RuntimeException if the property is not found or is not a valid boolean
+     * Gets the value of the nth policy.
+     * Example: for num = 1 → "policies.value.1"
+     *
+     * @param num the policy number
+     * @return the policy value as a double
+     * @throws RuntimeException if the policy index is invalid or value is not a valid double
      */
-    public static boolean getIsBalancedPolicy(){
-        return getBoolean("policies.is_balanced");
+    public static double getValuePolicies(int num) {
+        // Obtener todas las claves del archivo
+        Set<String> keys = config.stringPropertyNames();
+
+        // Contar cuántas policies.value.X hay
+        int totalPolicies = 0;
+        for (String key : keys) {
+            if (key.startsWith("policies.value.")) {
+                totalPolicies++;
+            }
+        }
+
+        if (num < 1 || num > totalPolicies) {
+            throw new RuntimeException("Invalid policy number: " + num +
+                    ". Expected between 1 and " + totalPolicies);
+        }
+
+        return getDouble("policies.value." + num);
     }
 
     /**
-     * Checks if full print mode is enabled for the tree visualization.
-     * This value is read from the "tree.fullprint" property.
-     * 
-     * @return true if full print is enabled, false otherwise
-     * @throws RuntimeException if the property is not found or is not a valid boolean
+     * Retrieves the standard policy value used as the base probability
+     * or default weighting factor in decision-making processes.
+     * <p>
+     * This value is read from the <b>policies.standard</b> property
+     * in the configuration file.
+     * </p>
+     *
+     * @return the standard policy value as a double
+     * @throws RuntimeException if the property is missing or not a valid double
      */
-    public static boolean getFullprint(){
-        return getBoolean("tree.fullprint");
-    }
-
-    /**
-     * Gets the balanced policy priority value.
-     * This value is read from the "policies.balanced" property.
-     * 
-     * @return the balanced policy priority as a double
-     * @throws RuntimeException if the property is not found or is not a valid double
-     */
-    public static double getBalancedPolicy() {
-        return getDouble("policies.balanced");
-    }
-
-    /**
-     * Gets the reservation confirmation priority value.
-     * This value is read from the "policies.reservation_confirmation" property.
-     * 
-     * @return the reservation confirmation priority as a double
-     * @throws RuntimeException if the property is not found or is not a valid double
-     */
-    public static double getReservationConfirmationPriority() {
-        return getDouble("policies.reservation_confirmation");
-    }
-
-    /**
-     * Gets the agent priority for P6.
-     * This value is read from the "policies.agent_priority_p6" property.
-     * 
-     * @return the agent priority for P6 as a double
-     * @throws RuntimeException if the property is not found or is not a valid double
-     */
-    public static double getAgentPriorityP6() {
-        return getDouble("policies.agent_priority_p6");
+    public static double getStandardPolicies(){
+        return getDouble("policies.standard");
     }
 
     /**
@@ -107,5 +98,16 @@ class ConfigLoader extends PropertiesLoader{
      */
     public static String getPetrinetFile () {
         return config.getProperty("petrinet." + getPetrinetNumber());
+    }
+
+    /**
+     * Checks if full print mode is enabled for the tree visualization.
+     * This value is read from the "tree.fullprint" property.
+     * 
+     * @return true if full print is enabled, false otherwise
+     * @throws RuntimeException if the property is not found or is not a valid boolean
+     */
+    public static boolean getFullprint(){
+        return getBoolean("tree.fullprint");
     }
 }

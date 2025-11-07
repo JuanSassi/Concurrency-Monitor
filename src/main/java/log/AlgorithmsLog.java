@@ -102,7 +102,11 @@ public class AlgorithmsLog extends Log {
         log.append("\nTHREADS RESPONSIBILITY");
         log.append("\n=================================");
         for (int i = 0; i < segments.size(); i++) {
-            List<String> formattedSegment = formatTransitionList(segments.get(i));
+            // Format each segment with "T" before each number
+            List<String> formattedSegment = new ArrayList<>();
+            for (Integer t : segments.get(i)) {
+                formattedSegment.add("T" + t);
+            }
             log.append("\nSegment ").append(i + 1).append(": ").append(formattedSegment);
         }
         

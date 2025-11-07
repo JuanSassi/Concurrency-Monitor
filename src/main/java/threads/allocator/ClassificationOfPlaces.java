@@ -1,17 +1,39 @@
 import java.util.*;
 
 /**
- * The algorithm automatically classifies the places of a Petri Net into:
- *   - Action places: participate in multiple place invariants
- *   - Resource places: appear in a single invariant (includes idle, resources and restrictions)
+ * Automatic classification of Petri net places based on P-invariant analysis.
+ * 
+ * <p>This class implements an algorithm that categorizes places into two main types:</p>
+ * <ul>
+ *   <li><b>Action places</b>: Participate in multiple P-invariants, representing active
+ *       system states or work-in-progress</li>
+ *   <li><b>Resource places</b>: Appear in a single P-invariant, including:
+ *       <ul>
+ *         <li>Resource places (available resources)</li>
+ *         <li>Idle places (idle state with tokens)</li>
+ *         <li>Restriction places (capacity constraints)</li>
+ *       </ul>
+ *   </li>
+ * </ul>
+ * 
+ * <p>The classification is based on structural analysis of the net using P-invariants
+ * (place invariants) and topological criteria. This information is essential for
+ * thread allocation analysis.</p>
+ * 
+ * <p>Example usage:</p>
+ * <pre>
+ * ClassificationOfPlaces classifier = new ClassificationOfPlaces(pre, post, W, m0, invariants);
+ * Set&lt;Integer&gt; actionPlaces = classifier.getActionPlaces();
+ * String report = classifier.logPA();
+ * </pre>
  * 
  * @author Juan Ignacio Sassi
  */
 public class ClassificationOfPlaces {
-    /** Pre matrix (token consumption by transitions) */
+    /** Pre-incidence matrix (token consumption by transitions) */
     private int[][] pre;
     
-    /** Post matrix (token production by transitions) */
+    /** Post-incidence matrix (token production by transitions) */
     private int[][] post;
     
     /** Incidence matrix (W = Post - Pre) */
@@ -38,19 +60,20 @@ public class ClassificationOfPlaces {
     /** Temporary set of candidate places to be resources (appear in a single invariant) */
     private Set<Integer> possibleRecourse;
 
+    /** Action places associated with each T-invariant */
     private List<List<Integer>> PAofIT;
 
     /**
-     * Constructor that initializes the algorithm with the Petri Net matrices.
+     * Constructs the classifier and performs automatic place classification.
      * 
-     * Automatically calculates the incidence matrix W and classifies the places
-     * according to their participation in place invariants.
+     * <p>The constructor automatically executes the two-phase classification algorithm
+     * and computes the action places for each T-invariant.</p>
      * 
-     * @param pre  Pre matrix of dimension [numPlaces][numTransitions] indicating
-     *             tokens consumed by each transition
-     * @param post Post matrix of dimension [numPlaces][numTransitions] indicating
-     *             tokens produced by each transition
-     * @param m0   Initial marking vector of dimension [numPlaces]
+     * @param pre  pre-incidence matrix of dimension [numPlaces][numTransitions]
+     * @param post post-incidence matrix of dimension [numPlaces][numTransitions]
+     * @param W    incidence matrix (W = Post - Pre)
+     * @param m0   initial marking vector of dimension [numPlaces]
+     * @param invariants invariants calculator containing P-invariants and T-invariants
      */
     public ClassificationOfPlaces(int[][] pre, int[][] post, int[][] W, int[] m0, Invariants invariants) {
         resourcePlaces = new HashSet<>();
@@ -71,24 +94,32 @@ public class ClassificationOfPlaces {
     }
 
     /**
-     * Classifies the net's places into action places and resource, restriction or idle places
-     * The algorithm implements two phases:
+     * Classifies the net's places into action places and resource/restriction/idle places.
      * 
-     * - Phase 1: Classifies places according to their participation in P-invariants:
-     *       Places appearing in a single invariant → candidates for resource, restriction or idle
-     *       Places appearing in multiple invariants → action places
+     * <p>The algorithm implements two phases:</p>
      * 
-     * - Phase 2: Refines the classification of candidate places:
-     *       If an invariant has a single candidate → it is a resource, restriction or idle
-     *       If an invariant has multiple candidates → identifies the idle place
-     *       using topological and initial marking criteria, the rest are action places
+     * <p><b>Phase 1: Initial classification based on P-invariant participation</b></p>
+     * <ul>
+     *   <li>Places in a single P-invariant → candidates for resource/restriction/idle</li>
+     *   <li>Places in multiple P-invariants → action places</li>
+     * </ul>
      * 
+     * <p><b>Phase 2: Refinement of candidate classification</b></p>
+     * <ul>
+     *   <li>If a P-invariant has a single candidate → confirmed as resource/restriction/idle</li>
+     *   <li>If a P-invariant has multiple candidates → identify the idle place using
+     *       topological criteria (initial marking > 0, exactly 1 input and 1 output transition).
+     *       Remaining candidates are reclassified as action places.</li>
+     * </ul>
+     * 
+     * <p>This two-phase approach ensures accurate classification even in complex
+     * net structures with multiple interacting P-invariants.</p>
      */
     private void classifyPlaces() {
         List<List<Integer>> pInvariants = invariants.getPInvariants();
         int numInvariants = pInvariants.size();
 
-        // Classify squares according to how many invariants they contain
+        // Phase 1: Classify places according to how many invariants they participate in
         for (int p = 0; p < numPlaces; p++) {
             int count = 0;
             for (List<Integer> inv : pInvariants) {
@@ -96,13 +127,13 @@ public class ClassificationOfPlaces {
             }
 
             if (count == 1) {
-                possibleRecourse.add(p); // possible resource, idle or restriction
+                possibleRecourse.add(p); // Possible resource, idle or restriction
             } else if (count > 1) {
-                actionPlaces.add(p); // action square (participates in several invariants)
+                actionPlaces.add(p); // Action place (participates in several invariants)
             }
         }
 
-        // Determine resource, idle, or restriction places within potential candidates
+        // Phase 2: Determine resource, idle, or restriction places within potential candidates
         for (List<Integer> inv : pInvariants) {
             // Filter only the possible ones that appear in this invariant
             List<Integer> involved = possibleRecourse.stream()
@@ -114,7 +145,7 @@ public class ClassificationOfPlaces {
                 // it is either a resource, constraint, or idle.
                 resourcePlaces.addAll(involved);
             } else if (involved.size() > 1) {
-                // Multiple candidates: identifying the idle square
+                // Multiple candidates: identifying the idle place
                 boolean done = false;
                 for (Integer i : involved) {
                     if(isIdlePlace(i) && !done) {
@@ -129,10 +160,21 @@ public class ClassificationOfPlaces {
     }
 
     /**
-     * Determines if a place is idle according to the criteria:
-     * 1. Initial marking > 0
-     * 2. Exactly 1 input transition
-     * 3. Exactly 1 output transition
+     * Determines if a place is an idle place according to topological criteria.
+     * 
+     * <p>A place is classified as idle if it satisfies ALL of the following:</p>
+     * <ol>
+     *   <li>Initial marking > 0 (contains tokens at start)</li>
+     *   <li>Exactly 1 input transition (one way to enter)</li>
+     *   <li>Exactly 1 output transition (one way to exit)</li>
+     * </ol>
+     * 
+     * <p>These criteria identify places that represent an idle or waiting state
+     * in a cyclic process, typically holding tokens when the corresponding
+     * resource or entity is not actively working.</p>
+     * 
+     * @param place the index of the place to check
+     * @return true if the place satisfies all idle place criteria
      */
     private boolean isIdlePlace(int place) {
         // Criterion 1: Initial marking > 0
@@ -158,7 +200,8 @@ public class ClassificationOfPlaces {
     }
 
     /**
-     * Useful methods for printing results of place classification
+     * Prints the classification results to the console.
+     * Displays resource/restriction/idle places and action places separately.
      */
     public void printClassification() {
         System.out.println("\n=================================");
@@ -168,7 +211,13 @@ public class ClassificationOfPlaces {
     }
 
     /**
-     * Prints the places that are part of each T-Invariant.
+     * Generates a log of places associated with each T-invariant.
+     * 
+     * <p>For each T-invariant, this method identifies all places that are
+     * connected to at least one transition in the invariant (either as input
+     * or output). This shows the "sphere of influence" of each T-invariant.</p>
+     * 
+     * @return formatted string showing places (PI) for each T-invariant
      */
     public String logPIofIT() {
         String log = "";
@@ -207,13 +256,19 @@ public class ClassificationOfPlaces {
     }
 
     /**
-     * Prints the action places of each T-Invariant.
+     * Generates a log of action places associated with each T-invariant.
+     * 
+     * <p>This is similar to logPIofIT(), but filters to show only action places,
+     * excluding resource, idle, and restriction places. This focuses on the
+     * places that represent active work or state transitions.</p>
+     * 
+     * @return formatted string showing action places (PA) for each T-invariant
      */
     public String logPAofIT() {
         String log = "\n=================================";
         log += "\nSet of action places associated with each Transition Invariant (PA of TI) \n";
         
-        // Validar que PAofIT esté calculado
+        // Validate that PAofIT is calculated
         if (PAofIT == null || PAofIT.isEmpty()) {
             log += "\nNo action places calculated yet. Please run classifyPlaces() first.\n";
             return log;
@@ -231,7 +286,10 @@ public class ClassificationOfPlaces {
     }
 
     /** 
-     * Print sets of action places associated with all Transition Invariants
+     * Generates a log of all action places in the Petri net.
+     * This is the union of action places across all T-invariants.
+     * 
+     * @return formatted string showing the complete set of action places (PA)
      */
     public String logPA() {
         String log = "\n=================================";
@@ -246,13 +304,30 @@ public class ClassificationOfPlaces {
         return log;
     }
 
+    /**
+     * Gets the set of action places identified by the classification algorithm.
+     * 
+     * @return unmodifiable set of action place indices
+     */
     public Set<Integer> getActionPlaces() {
         return actionPlaces;
     }
 
     /**
-     * Calculates the action places for each T-Invariant.
-     * This method should be called AFTER classifyPlaces() has been executed.
+     * Computes the action places associated with each T-invariant.
+     * 
+     * <p>For each T-invariant, this method:</p>
+     * <ol>
+     *   <li>Identifies all places connected to transitions in the invariant</li>
+     *   <li>Filters to keep only places classified as action places</li>
+     *   <li>Returns the filtered list</li>
+     * </ol>
+     * 
+     * <p>This method should be called AFTER classifyPlaces() has been executed,
+     * as it depends on the actionPlaces set being populated.</p>
+     * 
+     * @return list of lists, where each inner list contains action place indices
+     *         for the corresponding T-invariant
      */
     public List<List<Integer>> getPAofIT() {
         List<List<Integer>> result = new ArrayList<>();

@@ -43,17 +43,7 @@ class ConfigLoader extends PropertiesLoader{
      * @throws RuntimeException if the policy index is invalid or value is not a valid double
      */
     public static double getValuePolicies(int num) {
-        // Obtener todas las claves del archivo
-        Set<String> keys = config.stringPropertyNames();
-
-        // Contar cuántas policies.value.X hay
-        int totalPolicies = 0;
-        for (String key : keys) {
-            if (key.startsWith("policies.value.")) {
-                totalPolicies++;
-            }
-        }
-
+        int totalPolicies = getTotalPolicies();
         if (num < 1 || num > totalPolicies) {
             throw new RuntimeException("Invalid policy number: " + num +
                     ". Expected between 1 and " + totalPolicies);
@@ -75,6 +65,26 @@ class ConfigLoader extends PropertiesLoader{
      */
     public static double getStandardPolicies(){
         return getDouble("policies.standard");
+    }
+
+    /**
+     * Determines which processing policy should be applied.
+     * <p>
+     * If this property is set to <b>true</b>, the system uses the
+     * <b>standard (balanced)</b> policy, distributing workload evenly.
+     * If set to <b>false</b>, it applies a <b>prioritized processing</b>
+     * policy, giving preference to higher-priority tasks.
+     * </p>
+     *
+     * <p>This value is read from the <b>policies.isStandard</b> property
+     * in the configuration file.</p>
+     *
+     * @return {@code true} if the standard balanced policy is selected,
+     *         {@code false} if the prioritized policy is selected
+     * @throws RuntimeException if the property is missing or invalid
+     */
+    public static boolean isStandardPolicies(){
+        return getBoolean("policies.isStandard");
     }
 
     /**
@@ -109,5 +119,30 @@ class ConfigLoader extends PropertiesLoader{
      */
     public static boolean getFullprint(){
         return getBoolean("tree.fullprint");
+    }
+
+    /**
+     * Counts how many individual policy value entries are defined
+     * in the configuration file.
+     * <p>
+     * It searches for keys that start with <b>"policies.value."</b>
+     * (e.g., "policies.value.1", "policies.value.2", ...), and returns
+     * the total number of such entries.
+     * </p>
+     *
+     * @return the total number of defined policy values
+     */
+    public static int getTotalPolicies(){
+        // Get all the keys from the file
+        Set<String> keys = config.stringPropertyNames();
+
+        // Count how many policies.value.X there are
+        int totalPolicies = 0;
+        for (String key : keys) {
+            if (key.startsWith("policies.value.")) {
+                totalPolicies++;
+            }
+        }
+        return totalPolicies;
     }
 }

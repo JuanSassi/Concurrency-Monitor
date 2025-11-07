@@ -16,20 +16,15 @@ import java.util.Collections;
  * 
  * <p>The class orchestrates the analysis by utilizing invariants, place classification,
  * reachability tree construction, and responsibility analysis. Results are logged to
- * separate files for detailed examination.</p>
- * 
- * <p>Example usage:</p>
- * <pre>
- * ThreadAllocator allocator = new ThreadAllocator();
- * allocator.logAllocation();
- * int maxThreads = allocator.maxActiveThreads();
- * List&lt;Integer&gt; threadsPerSegment = allocator.getThreadsPerSegment();
- * </pre>
+ * separate files for detailed examination using specialized log classes.</p>
  * 
  * @see Invariants
  * @see ClassificationOfPlaces
  * @see ReachabilityTree
  * @see Responsibilities
+ * @see AlgorithmsLog
+ * @see ReachabilityTreeLog
+ * @see TreePerSegmentLog
  * 
  * @author Sassi Juan Ignacio
  */
@@ -58,14 +53,14 @@ public class ThreadAllocator {
     /** Responsibility analyzer for thread segmentation */
     private Responsibilities responsibilities;
     
-    /** Log file for algorithm results */
-    private Log algorithmsLog;
+    /** Specialized log for algorithm results */
+    private AlgorithmsLog algorithmsLog;
     
-    /** Log file for complete reachability tree */
-    private Log treeLog;
+    /** Specialized log for complete reachability tree */
+    private ReachabilityTreeLog treeLog;
     
-    /** Log file for segment-specific reachability information */
-    private Log treePerSegmentLog;
+    /** Specialized log for segment-specific reachability information */
+    private TreePerSegmentLog treePerSegmentLog;
     
     /** List of transition segments identified by responsibility analysis */
     private List<List<Integer>> segments;
@@ -78,7 +73,7 @@ public class ThreadAllocator {
      * <p>This constructor performs all necessary preprocessing for the three
      * allocation algorithms.</p>
      */
-    public ThreadAllocator(){
+    public ThreadAllocator() {
         this.Pre = PetrinetLoader.getPreMatrix();
         this.Post = PetrinetLoader.getPostMatrix();
         this.m0 = PetrinetLoader.getInitialMarkingVector();
@@ -89,99 +84,110 @@ public class ThreadAllocator {
         this.tree = new ReachabilityTree(analyzer.getActionPlaces());
         this.responsibilities = new Responsibilities(Pre, Post, invariants.getTInvariants(), analyzer.getActionPlaces());
 
-        this.algorithmsLog = new Log("algorithms");
-        this.treeLog = new Log("reachabilityTree");
-        this.treePerSegmentLog = new Log("treePerSegment");
-        this.segments = new ArrayList<>();
+        this.algorithmsLog = new AlgorithmsLog();
+        this.treeLog = new ReachabilityTreeLog();
+        this.treePerSegmentLog = new TreePerSegmentLog();
+        this.segments = responsibilities.getSegments();
     }
 
     /**
-     * Executes Algorithm 4.1 for determining maximum simultaneous active threads.
+     * Executes all three allocation algorithms and writes results to log files.
      * 
-     * <p>This algorithm performs the following steps:</p>
-     * <ol>
-     *   <li>Obtains the transition invariants of the Petri net</li>
-     *   <li>Obtains the set of places associated with each T-invariant</li>
-     *   <li>Determines the action-related places of each T-invariant</li>
-     *   <li>Computes the union of all action places</li>
-     *   <li>Analyzes the reachability tree to find the maximum concurrent tokens</li>
-     * </ol>
-     * 
-     * @return a formatted string containing the algorithm execution log
-     */
-    private String algorithm1() {
-        // Algorithm for determining maximum simultaneous active threads (4.1)
-        String log = "\n╔═══════════════════════════════════════════════════════════════════════╗\n" +
-                       "║  ALGORITHM FOR DETERMINING MAXIMUM SIMULTANEOUS ACTIVE THREADS (4.1)  ║\n" +
-                       "╚═══════════════════════════════════════════════════════════════════════╝";
-
-        // 1. Obtain the transition invariants of the PN
-        log += invariants.logTransitionsOfTI();
-        
-        // 2. Obtain the set of places associated with the T-invariant under analysis
-        log += analyzer.logPIofIT();
-
-        // 3. Determine the action-related places of each T-invariant
-        log += analyzer.logPAofIT();
-
-        // 4. Compute the union of action places and analyze maximum threads
-        log += analyzer.logPA();
-        log += tree.logMaxThreads();
-        return log;
-    }
-
-    /**
-     * Executes Algorithm 4.2 for determining thread responsibility and segmentation.
-     * 
-     * <p>This algorithm analyzes the Petri net structure to identify:</p>
+     * <p>Generates three log files:</p>
      * <ul>
-     *   <li>Sequential and parallel execution segments</li>
-     *   <li>Fork places (where parallel execution begins)</li>
-     *   <li>Join places (where parallel execution converges)</li>
-     *   <li>Responsibility boundaries for thread management</li>
+     *   <li>algorithms.log - Results of all three algorithms</li>
+     *   <li>reachabilityTree.log - Complete reachability tree</li>
+     *   <li>treePerSegment.log - Segment-specific reachability information</li>
      * </ul>
      * 
-     * @return a formatted string containing the algorithm execution log with
-     *         identified segments, forks, and joins
+     * <p>This method should be called after constructing the ThreadAllocator
+     * to perform the complete analysis and generate output files.</p>
      */
-    private String algorithm2(){
-        // Algorithm for determining thread responsibility (4.2)
-        String log = "\n╔═════════════════════════════════════════════════════════╗" +
-                     "\n║  ALGORITHM FOR DETERMINING THREAD RESPONSIBILITY (4.2)  ║" + 
-                     "\n╚═════════════════════════════════════════════════════════╝\n";
-
-        log += responsibilities.logAnalysis();
-        return log;
+    public void logAllocation() {
+        boolean fullPrint = ConfigLoader.getFullprint();
+        
+        // Algorithm 4.1: Maximum simultaneous active threads
+        algorithmsLog.logAlgorithm1(
+            invariants.getTInvariants(),
+            getPIofIT(),
+            analyzer.getPAofIT(),
+            analyzer.getActionPlaces(),
+            tree.getMaxNumThreads(),
+            tree.getNumReachableMarkings()
+        );
+        
+        // Algorithm 4.2: Thread responsibility
+        algorithmsLog.logAlgorithm2(
+            segments,
+            responsibilities.getForkPlaces(),
+            responsibilities.getJoinPlaces()
+        );
+        
+        // Algorithm 4.3: Maximum threads per segment
+        List<List<Integer>> allSegmentPlaces = new ArrayList<>();
+        List<Integer> maxThreadsPerSegment = new ArrayList<>();
+        
+        for (List<Integer> segment : segments) {
+            List<Integer> segmentPlaces = getPlacesFromSegment(segment);
+            allSegmentPlaces.add(segmentPlaces);
+            maxThreadsPerSegment.add(tree.calculateMaxThreadsInSegment(segmentPlaces));
+        }
+        
+        algorithmsLog.logAlgorithm3(segments, allSegmentPlaces, maxThreadsPerSegment);
+        
+        // Complete reachability tree
+        treeLog.logMarkings(
+            tree.getReachableMarkings(),
+            analyzer.getActionPlaces(),
+            tree.getMaxNumThreads(),
+            fullPrint
+        );
+        
+        // Segment-specific reachability trees
+        treePerSegmentLog.logAllSegments(
+            segments,
+            allSegmentPlaces,
+            tree.getReachableMarkings(),
+            analyzer.getActionPlaces(),
+            maxThreadsPerSegment,
+            fullPrint
+        );
     }
 
     /**
-     * Executes Algorithm 4.3 for determining maximum threads per segment.
+     * Gets the set of places associated with each T-invariant.
+     * A place is associated with a T-invariant if it's connected to any
+     * transition in that invariant.
      * 
-     * <p>For each segment identified in Algorithm 4.2, this algorithm:</p>
-     * <ol>
-     *   <li>Identifies the action places within the segment</li>
-     *   <li>Analyzes the reachability tree for those specific places</li>
-     *   <li>Computes the maximum concurrent tokens in the segment</li>
-     * </ol>
-     * 
-     * <p>This provides fine-grained thread allocation information for each
-     * execution segment of the system.</p>
-     * 
-     * @return a formatted string containing the algorithm execution log with
-     *         maximum threads for each segment
+     * @return list of place sets, one per T-invariant
      */
-    private String algorithm3() {
-        // Algorithm for determining maximum threads per segment (4.3)
-        String log = "\n╔═════════════════════════════════════════════════════════════════╗" +
-                     "\n║  ALGORITHM FOR DETERMINING MAXIMOM THREADS PER SEGMENT (4.3)  ║" +
-                     "\n╚═════════════════════════════════════════════════════════════════╝";
+    private List<List<Integer>> getPIofIT() {
+        List<List<Integer>> result = new ArrayList<>();
+        List<List<Integer>> tInvariants = invariants.getTInvariants();
+        int numPlaces = Pre.length;
+        int numTransitions = Pre[0].length;
         
-        segments = responsibilities.getSegments();
-        for(List<Integer> segment : segments){
-            List<Integer> segmentPlaces = getPlacesFromSegment(segment);
-            log += tree.logThreadsPerSegment(segment, segmentPlaces);
-        }      
-        return log;
+        for (List<Integer> tInv : tInvariants) {
+            Set<Integer> involvedPlaces = new HashSet<>();
+            
+            // For each transition in the T-invariant
+            for (int t = 0; t < numTransitions; t++) {
+                if (tInv.get(t) > 0) {
+                    // Add all places connected to this transition
+                    for (int p = 0; p < numPlaces; p++) {
+                        if (Pre[p][t] > 0 || Post[p][t] > 0) {
+                            involvedPlaces.add(p);
+                        }
+                    }
+                }
+            }
+            
+            List<Integer> sortedPlaces = new ArrayList<>(involvedPlaces);
+            Collections.sort(sortedPlaces);
+            result.add(sortedPlaces);
+        }
+        
+        return result;
     }
 
     /**
@@ -194,12 +200,8 @@ public class ThreadAllocator {
      *   <li>Are NOT fork or join places (to avoid boundary effects)</li>
      * </ul>
      * 
-     * <p>This filtering ensures that only internal action places of the segment
-     * are considered when computing thread requirements.</p>
-     * 
      * @param segment list of transition indices that form the segment
-     * @return sorted list of place indices that are action places within the segment,
-     *         excluding forks and joins
+     * @return sorted list of place indices that are action places within the segment
      */
     private List<Integer> getPlacesFromSegment(List<Integer> segment) {
         Set<Integer> places = new HashSet<>();
@@ -222,53 +224,6 @@ public class ThreadAllocator {
         List<Integer> segmentPlaces = new ArrayList<>(places);
         Collections.sort(segmentPlaces);
         return segmentPlaces;
-    }
-
-    /**
-     * Retrieves the complete reachability tree log showing all reachable markings.
-     * 
-     * @return formatted string with the complete marking table for action places
-     */
-    private String getLogMarkings(){
-        return tree.logMarkings();
-    }
-
-    /**
-     * Retrieves detailed segment logs showing reachable markings for each segment.
-     * 
-     * <p>For each segment, generates a filtered view of the reachability tree
-     * showing only the places relevant to that segment.</p>
-     * 
-     * @return formatted string with marking tables for all segments
-     */
-    private String getLogSegments(){
-        String log = "";
-        for(List<Integer> segment : segments){
-            List<Integer> segmentPlaces = getPlacesFromSegment(segment);
-            log += tree.logSegment(segment, segmentPlaces);
-        }      
-        return log;
-    }
-
-    /**
-     * Executes all three allocation algorithms and writes results to log files.
-     * 
-     * <p>Generates three log files:</p>
-     * <ul>
-     *   <li>algorithms.log - Results of all three algorithms</li>
-     *   <li>reachabilityTree.log - Complete reachability tree</li>
-     *   <li>treePerSegment.log - Segment-specific reachability information</li>
-     * </ul>
-     * 
-     * <p>This method should be called after constructing the ThreadAllocator
-     * to perform the complete analysis and generate output files.</p>
-     */
-    public void logAllocation(){
-        algorithmsLog.write(algorithm1());
-        algorithmsLog.write(algorithm2());
-        algorithmsLog.write(algorithm3());
-        treeLog.write(getLogMarkings());
-        treePerSegmentLog.write(getLogSegments());
     }
 
     /**
@@ -295,15 +250,11 @@ public class ThreadAllocator {
      * Gets the maximum number of threads required for each segment.
      * The list order corresponds to the order of segments returned by getSegments().
      * 
-     * <p>This information is useful for allocating thread pools or semaphores
-     * specific to each segment of the system.</p>
-     * 
-     * @return list where each element is the maximum thread count for the
-     *         corresponding segment
+     * @return list where each element is the maximum thread count for the corresponding segment
      */
     public List<Integer> getThreadsPerSegment() {
         List<Integer> maxThreadsPerSegment = new ArrayList<>();
-        for(List<Integer> segment : segments){
+        for (List<Integer> segment : segments) {
             List<Integer> segmentPlaces = getPlacesFromSegment(segment);
             maxThreadsPerSegment.add(tree.calculateMaxThreadsInSegment(segmentPlaces));
         }

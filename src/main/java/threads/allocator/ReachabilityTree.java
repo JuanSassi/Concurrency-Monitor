@@ -1,5 +1,4 @@
 import java.util.*;
-import java.util.ArrayList;
 
 /**
  * Class representing a reachability tree for action places in a Petri net.
@@ -30,9 +29,6 @@ public class ReachabilityTree {
     /** Set of all reachable markings for action places */
     private Set<int[]> reachableMarkings;
     
-    /** Sum of tokens for each reachable marking */
-    private int[] markSum;
-    
     /** Maximum number of concurrent threads across all markings */
     private int maxNumThreads;
     
@@ -49,8 +45,7 @@ public class ReachabilityTree {
         this.reachableMarkings = new LinkedHashSet<>();
 
         buildReachabilitySet();
-        this.markSum = getMarkSum();
-        this.maxNumThreads = getMaxNumThreads();
+        this.maxNumThreads = calculateMaxNumThreads();
     }
     
     /**
@@ -116,36 +111,19 @@ public class ReachabilityTree {
     }
 
     /**
-     * Computes the sum of tokens for each reachable marking.
-     * The token sum represents the potential number of concurrent threads
-     * in that particular state.
-     * 
-     * @return array where each element is the sum of tokens in the corresponding marking
-     */
-    private int[] getMarkSum() {
-        int[] marks = new int[reachableMarkings.size()];
-        int i = 0;
-        for (int[] marking : reachableMarkings) {
-            int sum = 0;
-            for (int tokens : marking) {
-                sum += tokens;
-            }
-            marks[i] = sum;
-            i++;
-        }
-        return marks;
-    }
-
-    /**
-     * Gets the maximum value of token sum across all reachable markings.
+     * Calculates the maximum number of threads across all reachable markings.
      * This represents the maximum number of threads that can be simultaneously
      * active in the system.
      * 
      * @return the maximum number of concurrent threads
      */
-    public int getMaxNumThreads() {
+    private int calculateMaxNumThreads() {
         int max = 0;
-        for (int sum : markSum) {
+        for (int[] marking : reachableMarkings) {
+            int sum = 0;
+            for (int tokens : marking) {
+                sum += tokens;
+            }
             if (sum > max) {
                 max = sum;
             }
@@ -223,71 +201,12 @@ public class ReachabilityTree {
     }
 
     /**
-     * Generates a summary log of maximum thread analysis.
-     * Includes total markings found and maximum concurrent threads,
-     * with a reference to the detailed log file.
+     * Gets the maximum number of threads that can be simultaneously active.
      * 
-     * @return formatted string with analysis summary
+     * @return the maximum number of concurrent threads
      */
-    public String logMaxThreads() {
-        String log = "\n=== ACHIEVABLE MARKS (Action places) ===";
-        log += "\nTotal unique marks: " + reachableMarkings.size();
-        log += "\nMaximum number of active threads: " + maxNumThreads +"\n";
-        log += "\nThe Reachability tree is complete at reachabilityTree.log";
-        return log;
-    }
-    
-    /**
-     * Generates a detailed log of all reachable markings.
-     * 
-     * <p>The output includes:</p>
-     * <ul>
-     *   <li>Header with action place indices</li>
-     *   <li>Each reachable marking as a row</li>
-     *   <li>Token sum for each marking</li>
-     *   <li>Statistics about maximum threads</li>
-     * </ul>
-     * 
-     * <p>By default, only the first 20 markings are printed unless
-     * full print mode is enabled in the configuration.</p>
-     * 
-     * @return formatted string with complete marking table
-     */
-    public String logMarkings() {
-        String log = "\n=== ACHIEVABLE MARKS (Action places) ===";
-        log += "\nTotal unique marks: " + reachableMarkings.size();
-        log += "\nMaximum number of active threads: " + maxNumThreads +"\n";
-        
-        // Create sorted list of action places for header
-        List<Integer> sortedPlaces = new ArrayList<>(actionPlaces);
-        Collections.sort(sortedPlaces);
-        
-        // Print header
-        log += "\nM\t";
-        for (Integer place : sortedPlaces) {
-            log += "P" + place + "\t";
-        }
-        log += "SUM\n";
-        
-        // Print separator line
-        for (int j = 0; j < sortedPlaces.size()+1; j++) {
-            log += "---\t";
-        }
-        log += "----\n";
-        
-        // Print markings
-        int i = 0;
-        boolean fullPrint = ConfigLoader.getFullprint();
-        for (int[] marking : reachableMarkings) {
-            if (i >= 20 && !fullPrint) break;
-            log += "M" + i + "\t";
-            for (int token : marking) {
-                log += token + "\t";
-            }
-            log += markSum[i]+"\n";
-            i++;
-        }
-        return log;
+    public int getMaxNumThreads() {
+        return maxNumThreads;
     }
 
     /**
@@ -323,122 +242,5 @@ public class ReachabilityTree {
         }
         
         return maxThreadsSegment;
-    }
-
-    /**
-     * Generates a summary log for a specific segment showing maximum threads.
-     * 
-     * @param segment list of transition indices in the segment
-     * @param segmentPlaces list of action places in the segment (excluding forks/joins)
-     * @return formatted string with segment analysis summary
-     */
-    public String logThreadsPerSegment(List<Integer> segment, List<Integer> segmentPlaces) {
-        String log = "";
-        int maxThreadsSegment = calculateMaxThreadsInSegment(segmentPlaces);
-
-        log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
-        if (segmentPlaces.isEmpty()) {
-            log += "\nIt hasn't action place neither forks and joins in this segment";
-        } else {
-            log += "\nAction places in segment (without forks and joins): " + segmentPlaces;
-        }
-        log += "\nMaximum number of active threads in segment: " + maxThreadsSegment + "\n";
-        
-        return log;
-    }
-
-    /**
-     * Generates a detailed log of reachable markings for a specific segment.
-     * 
-     * <p>Similar to logMarkings(), but filters the output to show only
-     * the places relevant to the specified segment. This provides a focused
-     * view of the state space for segment-specific analysis.</p>
-     * 
-     * <p>The output includes:</p>
-     * <ul>
-     *   <li>Segment identification (transitions)</li>
-     *   <li>Action places in the segment</li>
-     *   <li>Marking table showing only segment places</li>
-     *   <li>Token sums for the segment places only</li>
-     * </ul>
-     * 
-     * @param segment list of transition indices that form the segment
-     * @param segmentPlaces list of action places in the segment (excluding forks/joins)
-     * @return formatted string with segment-specific marking table
-     */
-    public String logSegment(List<Integer> segment, List<Integer> segmentPlaces) {
-        String log = "";
-        if (segmentPlaces.isEmpty()) {
-            log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
-            log += "\nIt hasn't action place neither forks and joins in this segment";
-            log += "\nMaximum number of active threads in segment: " + 1 +"\n";
-            return log;
-        }
-        
-        // Calculate maximum threads for this segment
-        int maxThreadsSegment = 0;
-        List<Integer> allSortedPlaces = new ArrayList<>(actionPlaces);
-        Collections.sort(allSortedPlaces);
-        
-        for (int[] marking : reachableMarkings) {
-            int segmentSum = 0;
-            for (Integer segmentPlace : segmentPlaces) {
-                int markingIndex = allSortedPlaces.indexOf(segmentPlace);
-                if (markingIndex >= 0 && markingIndex < marking.length) {
-                    segmentSum += marking[markingIndex];
-                }
-            }
-            if (segmentSum > maxThreadsSegment) {
-                maxThreadsSegment = segmentSum;
-            }
-        }
-        
-        log += "\n=== SEGMENT MARKS (Transitions: " + segment + ") ===";
-        log += "\nAction places in segment (without forks and joins): " + segmentPlaces;
-        log += "\nMaximum number of active threads in segment: " + maxThreadsSegment + "\n";
-        
-        // Sort segment places
-        Collections.sort(segmentPlaces);
-        
-        // Print header
-        log += "\nM\t";
-        for (Integer place : segmentPlaces) {
-            log += "P" + place + "\t";
-        }
-        log += "SUM\n";
-        
-        // Print separator line
-        log += "---\t";
-        for (int j = 0; j < segmentPlaces.size(); j++) {
-            log += "---\t";
-        }
-        log += "----\n";
-        
-        // Print filtered markings
-        int i = 0;
-        boolean fullPrint = ConfigLoader.getFullprint();
-        for (int[] marking : reachableMarkings) {
-            if (i >= 20 && !fullPrint) break;
-            
-            log += "M" + i + "\t";
-            int segmentSum = 0;
-            
-            // Print only tokens from segment places
-            for (Integer segmentPlace : segmentPlaces) {
-                // Find the index of this place in the marking
-                int markingIndex = allSortedPlaces.indexOf(segmentPlace);
-                if (markingIndex >= 0 && markingIndex < marking.length) {
-                    int tokens = marking[markingIndex];
-                    log += tokens + "\t";
-                    segmentSum += tokens;
-                } else {
-                    log += "0\t";
-                }
-            }
-            
-            log += segmentSum + "\n";
-            i++;
-        }
-        return log;
     }
 }

@@ -14,22 +14,6 @@ import java.util.*;
  * 
  * <p>Where W is the incidence matrix of the net (W = Post - Pre).</p>
  * 
- * <p>The algorithm computes minimal invariants by:</p>
- * <ol>
- *   <li>Computing the nullspace basis of W (for T-invariants) or W^T (for P-invariants)</li>
- *   <li>Generating non-negative linear combinations of basis vectors</li>
- *   <li>Filtering to keep only minimal invariants (no proper subset support)</li>
- * </ol>
- * 
- * <p>Example usage:</p>
- * <pre>
- * int[][] W = Matrix.subtract(post, pre);
- * Invariants inv = new Invariants(W);
- * List&lt;List&lt;Integer&gt;&gt; tInvariants = inv.getTInvariants();
- * List&lt;List&lt;Integer&gt;&gt; pInvariants = inv.getPInvariants();
- * inv.printTInvariants();
- * </pre>
- * 
  * @author Juan Ignacio Sassi
  */
 public class Invariants {
@@ -76,17 +60,13 @@ public class Invariants {
      *   <li>Sort results by component sum (simplest invariants first)</li>
      * </ol>
      * 
-     * <p>The coefficient limit (maxCoeff) controls the search space. Higher values
-     * find more invariants but increase computation time exponentially.</p>
-     * 
      * @param matrix matrix for which invariants are sought (W for T-invariants,
      *               W^T for P-invariants)
      * @return list of minimal invariant vectors as lists of integers
      */
     public List<List<Integer>> computeInvariants(int[][] matrix) {
-        List<int[]> nullBasis=Nullspace.compute(matrix);
-        // Limit for each coefficient in the linear combinations
-        int maxCoeff = 4 ;
+        List<int[]> nullBasis = Nullspace.compute(matrix);
+        int maxCoeff = 4;
         Set<List<Integer>> all = new HashSet<>();
 
         // Generate all non-negative linear combinations
@@ -96,48 +76,14 @@ public class Invariants {
         }
 
         // Filter only minimal invariants
-        List<List<Integer>> minimal=new ArrayList<>();
-        for(List<Integer> inv:all) 
-            if(isMinimal(inv,all)) 
+        List<List<Integer>> minimal = new ArrayList<>();
+        for (List<Integer> inv : all) 
+            if (isMinimal(inv, all)) 
                 minimal.add(inv);
 
         // Sort by sum of components (simplest invariants first)
-        minimal.sort(Comparator.comparingInt(v->v.stream().mapToInt(Integer::intValue).sum()));
+        minimal.sort(Comparator.comparingInt(v -> v.stream().mapToInt(Integer::intValue).sum()));
         return minimal;
-    }
-
-    /**
-     * Prints all minimal P-invariants to the console.
-     * 
-     * <p>Displays the total count and lists each P-invariant in the format
-     * "x1 = [vector]", "x2 = [vector]", etc.</p>
-     * 
-     * <p>P-invariants represent conservative components of the Petri net,
-     * such as resource pools or capacity constraints.</p>
-     */
-    public void printPInvariants() {
-        System.out.println("\n=================================");
-        System.out.println(("P") + "- (minimal invariants found): " + pInvariant.size() + "\n");
-        for(int i=0;i<pInvariant.size();i++) {
-            System.out.println("x"+(i+1)+" = "+pInvariant.get(i));
-        }
-    }
-
-    /**
-     * Prints all minimal T-invariants to the console.
-     * 
-     * <p>Displays the total count and lists each T-invariant in the format
-     * "y1 = [vector]", "y2 = [vector]", etc.</p>
-     * 
-     * <p>T-invariants represent firing sequences that return the net to its
-     * initial marking, indicating cyclic or repetitive behavior.</p>
-     */
-    public void printTInvariants() {
-        System.out.println("\n=================================");
-        System.out.println(("T") + "- (minimal invariants found): " + tInvariant.size() + "\n");
-        for(int i=0;i<tInvariant.size();i++) {
-            System.out.println("y"+(i+1)+" = "+tInvariant.get(i));
-        }
     }
 
     /**
@@ -146,9 +92,6 @@ public class Invariants {
      * <p>For each basis vector, tests coefficients from -maxCoeff to +maxCoeff.
      * Only combinations resulting in completely non-negative vectors with at least
      * one positive component are kept. The trivial zero vector is ignored.</p>
-     * 
-     * <p>Each valid combination is reduced to minimal form by dividing by the GCD
-     * of its components before being added to the result set.</p>
      * 
      * @param basis nullspace basis vectors
      * @param coeffs array of coefficients (filled recursively)
@@ -170,7 +113,7 @@ public class Invariants {
                 }
             }
             
-            if (allZero) return; // Ignore the trivial zero vector
+            if (allZero) return;
             
             // Verify that it is non-negative and has at least one positive component
             boolean nonNeg = true, anyPos = false;
@@ -210,11 +153,7 @@ public class Invariants {
      * Checks whether an invariant is minimal.
      * 
      * <p>An invariant is minimal if there is no other invariant whose support
-     * (set of indices with positive values) is a proper subset of its own support.
-     * In other words, a minimal invariant cannot be obtained by adding extra
-     * components to a simpler invariant.</p>
-     * 
-     * <p>This ensures that the returned invariants form a minimal generating set.</p>
+     * (set of indices with positive values) is a proper subset of its own support.</p>
      * 
      * @param inv invariant vector to check
      * @param all set of all invariants found
@@ -244,69 +183,42 @@ public class Invariants {
     }
 
     /**
+     * Prints all minimal P-invariants to the console.
+     */
+    public void printPInvariants() {
+        System.out.println("\n=================================");
+        System.out.println("P-invariants (minimal invariants found): " + pInvariant.size() + "\n");
+        for (int i = 0; i < pInvariant.size(); i++) {
+            System.out.println("x" + (i + 1) + " = " + pInvariant.get(i));
+        }
+    }
+
+    /**
+     * Prints all minimal T-invariants to the console.
+     */
+    public void printTInvariants() {
+        System.out.println("\n=================================");
+        System.out.println("T-invariants (minimal invariants found): " + tInvariant.size() + "\n");
+        for (int i = 0; i < tInvariant.size(); i++) {
+            System.out.println("y" + (i + 1) + " = " + tInvariant.get(i));
+        }
+    }
+
+    /**
      * Gets the list of computed P-invariants.
-     * 
-     * <p>P-invariants are non-negative vectors x such that x^T·W = 0, representing
-     * conservative components of the Petri net. They identify sets of places where
-     * the weighted sum of tokens remains constant throughout all reachable markings.</p>
-     * 
-     * <p>Examples include:</p>
-     * <ul>
-     *   <li>Resource pools (total available + in-use = constant)</li>
-     *   <li>Capacity constraints (total capacity = constant)</li>
-     *   <li>Idle/active cycles (idle + active = constant)</li>
-     * </ul>
      * 
      * @return list of minimal P-invariant vectors
      */
-    public List<List<Integer>> getPInvariants(){
+    public List<List<Integer>> getPInvariants() {
         return pInvariant;
     }
 
     /**
      * Gets the list of computed T-invariants.
      * 
-     * <p>T-invariants are non-negative vectors y such that W·y = 0, representing
-     * firing sequences that return the net to its initial marking. They characterize
-     * the cyclic or repetitive behavior of the system.</p>
-     * 
-     * <p>Each T-invariant corresponds to a complete execution cycle or workflow
-     * in the modeled system. Multiple T-invariants indicate concurrent or alternative
-     * execution paths.</p>
-     * 
      * @return list of minimal T-invariant vectors
      */
-    public List<List<Integer>> getTInvariants(){
+    public List<List<Integer>> getTInvariants() {
         return tInvariant;
-    }
-
-    /**
-     * Generates a formatted log of transitions involved in each T-invariant.
-     * 
-     * <p>For each T-invariant, lists only the transitions with positive values
-     * (i.e., transitions that participate in that particular firing sequence).
-     * Transitions are displayed in format "T0", "T1", etc.</p>
-     * 
-     * @return formatted string showing transitions for each T-invariant
-     */
-    public String logTransitionsOfTI() {
-        String log = "";
-        log += "\n=================================";
-        log += "\nT-Invariant Transitions\n";
-        
-        for (int i = 0; i < tInvariant.size(); i++) {
-            List<Integer> tInv = tInvariant.get(i);
-            
-            // Filter transitions that belong to the invariant (value > 0)
-            List<String> transitionNames = new ArrayList<>();
-            for (int t = 0; t < tInv.size(); t++) {
-                if (tInv.get(t) > 0) {
-                    transitionNames.add("T" + t);
-                }
-            }
-            
-            log += "\ny" + (i + 1) + ": " + transitionNames;
-        }
-        return log;
     }
 }

@@ -2,7 +2,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-/*public class Monitor implements MonitorInterface {
+public class Monitor implements MonitorInterface {
     // Singleton pattern
     private static final Monitor monitor = new Monitor();
     private final PetriNet petriNet;
@@ -16,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
     private Monitor() {
         this.petriNet = PetriNet.getInstance();
         petriNet.resetPetrinet();
+
         this.conditionTransition = new Condition[petriNet.getNumTransitions()];
         for (int i = 0; i < petriNet.getNumTransitions(); i++) {
             this.conditionTransition[i] = lock.newCondition();
@@ -41,23 +42,23 @@ import java.util.concurrent.locks.ReentrantLock;
                 }
             }
             
-            long startTime = System.nanoTime(); // new
+            long startTime = System.nanoTime();
 
             // Now the transition is enabled - fire it
             if(petriNet.isTemporary(transition)){
                 petriNet.consumeTokens(transition);
-                //Log.addTransitionFiring(transition); //new
+                //Log.addTransitionFiring(transition);
                 lock.unlock();
 
-                long sleepStart = System.nanoTime(); //new
+                long sleepStart = System.nanoTime();
 
                 try {
-                    SleepUtilities.switchNap(transition);
+                    //SleepUtilities.switchNap(transition);
                 } finally {
                     lock.lock();
-                    long sleepEnd = System.nanoTime(); //new
-                    long sleepDuration = (sleepEnd - sleepStart) / 1_000_000; //new
-                    //Log.addTemporaryTransitionDuration(transition, sleepDuration); //new
+                    long sleepEnd = System.nanoTime();
+                    long sleepDuration = (sleepEnd - sleepStart) / 1_000_000;
+                    //Log.addTemporaryTransitionDuration(transition, sleepDuration);
 
                     petriNet.produceTokens(transition);
                 }
@@ -78,10 +79,11 @@ import java.util.concurrent.locks.ReentrantLock;
         } finally {
             lock.unlock();
         }
-    }*/
+    }
 
-    /*private void schedule() {
-        if(petriNet.transitionEnabled(2) && petriNet.transitionEnabled(3)) {
+    private void schedule() {
+
+        /*if(petriNet.transitionEnabled(2) && petriNet.transitionEnabled(3)) {
             double p;
             p = Policy.getAgentPriority();
             if (Math.random() < p) {
@@ -95,7 +97,7 @@ import java.util.concurrent.locks.ReentrantLock;
                     conditionTransition[i].signal();
                 }
             }
-        }
+        }*/
     }
     
     private void endSimulation() {
@@ -104,4 +106,4 @@ import java.util.concurrent.locks.ReentrantLock;
             condition.signalAll();
         }
     }
-}*/
+}

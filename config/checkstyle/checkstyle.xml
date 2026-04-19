@@ -1,0 +1,39 @@
+<!-- Google Java Style · reglas compatibles con Spotless -->
+<module name="Checker">
+  <property name="severity" value="error"/>
+  <property name="fileExtensions" value="java"/>
+
+  <!-- Archivos sin tab, sin trailing whitespace -->
+  <module name="FileTabCharacter"/>
+
+  <module name="TreeWalker">
+
+    <!-- Imports -->
+    <module name="AvoidStarImport"/>
+    <module name="UnusedImports"/>
+    <module name="RedundantImport"/>
+
+    <!-- Nombrado -->
+    <module name="TypeName"/>
+    <module name="MethodName"/>
+    <module name="ParameterName"/>
+    <module name="LocalVariableName"/>
+    <module name="ConstantName"/>
+
+    <!-- Complejidad -->
+    <module name="CyclomaticComplexity">
+      <property name="max" value="10"/>
+    </module>
+    <module name="MethodLength">
+      <property name="max" value="60"/>
+    </module>
+
+    <!-- Buenas prácticas -->
+    <module name="EqualsHashCode"/>
+    <module name="MissingSwitchDefault"/>
+    <module name="FallThrough"/>
+    <module name="EmptyCatchBlock"/>
+    <module name="IllegalThrows"/>
+
+  </module>
+</module>

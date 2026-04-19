@@ -69,6 +69,13 @@ test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
 }
+tasks.named('test') {
+    doLast {
+        exec {
+            commandLine 'xdg-open', 'build/reports/tests/test/index.html'
+        }
+    }
+}
 
 // ── Coverage (JaCoCo) ────────────────────────────────────
 jacoco {

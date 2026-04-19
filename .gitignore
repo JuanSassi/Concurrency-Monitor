@@ -1,0 +1,22 @@
+# Crear .gitignore
+cat > .gitignore << 'EOF'
+# Gradle cache local — nunca al repo
+.gradle/
+build/
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+*.class
+
+# OS
+.DS_Store
+Thumbs.db
+EOF
+
+# Sacar .gradle/ del staging
+git restore --staged .gradle/
+
+# Verificar que quedó fuera
+git status

@@ -1,0 +1,117 @@
+plugins {
+    id 'application'
+    id 'java'
+    id 'com.diffplug.spotless'   version '6.25.0'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs'     version '6.0.9'
+    id 'jacoco'
+    id 'org.sonarqube'           version '5.0.0.4638'   // opcional — borrar si no se usa
+}
+
+// ── Compatibilidad Java ──────────────────────────────────
+sourceCompatibility = '21'
+targetCompatibility = '21'
+
+application {
+    mainClass = 'Main'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    implementation     'org.ejml:ejml-simple:0.43.1'
+}
+
+// ── Formato (≈ black + isort) ────────────────────────────
+spotless {
+    java {
+        googleJavaFormat('1.22.0')
+        removeUnusedImports()       // ≈ isort
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+// ── Linting (≈ flake8) ───────────────────────────────────
+checkstyle {
+    toolVersion    = '10.17.0'
+    configFile     = file('config/checkstyle/checkstyle.xml')
+    ignoreFailures = false
+}
+
+pmd {
+    toolVersion    = '7.3.0'
+    consoleOutput  = true
+    ruleSetFiles   = files('config/pmd/ruleset.xml')
+    ignoreFailures = false
+}
+
+// ── Calidad estática ─────────────────────────────────────
+spotbugs {
+    toolVersion    = '4.8.6'
+    effort         = com.github.spotbugs.snom.Effort.MAX
+    reportLevel    = com.github.spotbugs.snom.Confidence.valueOf('MEDIUM')
+    ignoreFailures = false
+}
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        html.required = true
+        xml.required  = false
+    }
+}
+
+// ── Tests unitarios (JUnit 5) ────────────────────────────
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+// ── Coverage (JaCoCo) ────────────────────────────────────
+jacoco {
+    toolVersion = '0.8.12'
+}
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required  = true    // necesario para SonarCloud
+        html.required = true
+    }
+}
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80  // 80% mínimo
+            }
+        }
+    }
+}
+
+// ── SonarCloud ───────────────────────────────────────────
+sonar {
+    properties {
+        property 'sonar.coverage.jacoco.xmlReportPaths',
+                 'build/reports/jacoco/test/jacocoTestReport.xml'
+        property 'sonar.java.spotbugs.reportPaths',
+                 'build/reports/spotbugs/main.xml'
+        property 'sonar.java.checkstyle.reportPaths',
+                 'build/reports/checkstyle/main.xml'
+    }
+}
+
+// ── JAR ejecutable (igual que antes) ────────────────────
+jar {
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveBaseName    = 'concurrency-monitor'
+    archiveVersion     = '1.0'
+}

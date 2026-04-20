@@ -17,3 +17,4 @@ cd Concurrency-Monitor
 ./gradlew test jacocoTestReport && xdg-open build/reports/jacoco/test/html/index.html
 
 ./gradlew spotlessApply
+./gradlew checkstyleMain

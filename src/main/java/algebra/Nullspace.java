@@ -1,8 +1,10 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Utility class for computing the nullspace (kernel) of integer matrices. The nullspace of a matrix
- * W consists of all vectors x such that W*x = 0. This class uses Gaussian elimination with exact
+ * w consists of all vectors x such that w*x = 0. This class uses Gaussian elimination with exact
  * rational arithmetic to compute a minimal integer basis for the nullspace.
  *
  * <p>The algorithm guarantees exact results by using rational number arithmetic internally and
@@ -44,7 +46,6 @@ class Nullspace {
       long g = gcd(Math.abs(n), Math.abs(d));
       n /= g;
       d /= g;
-      // Keep the sign in the numerator
       if (d < 0) {
         n = -n;
         d = -d;
@@ -63,8 +64,7 @@ class Nullspace {
     }
 
     /**
-     * Adds this rational to another rational. Computes this + r using the formula: (a/b) + (c/d) =
-     * (ad + bc)/(bd)
+     * Adds this rational to another rational.
      *
      * @param r the rational to add
      * @return a new rational representing the sum
@@ -74,8 +74,7 @@ class Nullspace {
     }
 
     /**
-     * Subtracts another rational from this rational. Computes this - r using the formula: (a/b) -
-     * (c/d) = (ad - bc)/(bd)
+     * Subtracts another rational from this rational.
      *
      * @param r the rational to subtract
      * @return a new rational representing the difference
@@ -85,8 +84,7 @@ class Nullspace {
     }
 
     /**
-     * Multiplies this rational by another rational. Computes this * r using the formula: (a/b) *
-     * (c/d) = (ac)/(bd)
+     * Multiplies this rational by another rational.
      *
      * @param r the rational to multiply by
      * @return a new rational representing the product
@@ -96,7 +94,7 @@ class Nullspace {
     }
 
     /**
-     * Returns the negation of this rational. Computes -this by negating the numerator.
+     * Returns the negation of this rational.
      *
      * @return a new rational representing -this
      */
@@ -105,7 +103,7 @@ class Nullspace {
     }
 
     /**
-     * Checks if this rational is zero. A rational is zero if and only if its numerator is zero.
+     * Checks if this rational is zero.
      *
      * @return true if this rational equals zero, false otherwise
      */
@@ -114,8 +112,7 @@ class Nullspace {
     }
 
     /**
-     * Computes the greatest common divisor using Euclid's algorithm. Uses the recursive formula:
-     * gcd(a, b) = gcd(b, a mod b) with base case gcd(a, 0) = a.
+     * Computes the greatest common divisor using Euclid's algorithm.
      *
      * @param a the first number (non-negative)
      * @param b the second number (non-negative)
@@ -132,109 +129,174 @@ class Nullspace {
   }
 
   /**
-   * Computes the nullspace (kernel) of matrix W using Gaussian elimination. The nullspace contains
-   * all vectors x such that W*x = 0.
+   * Converts an integer matrix to a rational matrix.
    *
-   * <p>Algorithm steps:
+   * @param w the integer matrix (m x n)
+   * @return a new Rational matrix with the same values
+   */
+  static Rational[][] toRational(int[][] w) {
+    int m = w.length, n = w[0].length;
+    Rational[][] a = new Rational[m][n];
+    for (int i = 0; i < m; i++) for (int j = 0; j < n; j++) a[i][j] = new Rational(w[i][j]);
+    return a;
+  }
+
+  /**
+   * Reduces a rational matrix to reduced row echelon form (RREF) in-place using Gaussian
+   * elimination, and records the pivot column for each row.
    *
-   * <ol>
-   *   <li>Convert W to reduced row echelon form using rational arithmetic
-   *   <li>Identify free variables (columns without pivots)
-   *   <li>For each free variable, construct a basis vector of the nullspace
-   *   <li>Convert rational vectors to integers by multiplying by LCM of denominators
-   *   <li>Reduce each vector by dividing by its GCD
-   * </ol>
+   * @param a the rational matrix to reduce (modified in-place)
+   * @param pivots array of length n; pivots[col] is set to the row index of the pivot in that
+   *     column, or -1 if the column is free
+   */
+  static void gaussianElimination(Rational[][] a, int[] pivots) {
+    int m = a.length, n = a[0].length;
+    Arrays.fill(pivots, -1);
+
+    int row = 0;
+    for (int col = 0; col < n && row < m; col++) {
+      int sel = findPivot(a, row, col, m);
+      if (sel == -1) continue;
+
+      swapRows(a, row, sel);
+      normalizeRow(a, row, col, n);
+      eliminateColumn(a, row, col, m, n);
+
+      pivots[col] = row;
+      row++;
+    }
+  }
+
+  /**
+   * Finds a pivot row for a given column starting from a specific row. A pivot is the first
+   * non-zero element in the column below (or at) the given row.
    *
-   * @param W the input matrix (m x n)
+   * @param a the matrix in rational form
+   * @param row the starting row for the search
+   * @param col the column where the pivot is searched
+   * @param m total number of rows
+   * @return the index of a row with a non-zero element in the given column, or -1 if no such row
+   *     exists
+   */
+  private static int findPivot(Rational[][] a, int row, int col, int m) {
+    for (int i = row; i < m; i++) {
+      if (!a[i][col].isZero()) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Swaps two rows of the matrix in-place.
+   *
+   * @param a the matrix
+   * @param r1 index of the first row
+   * @param r2 index of the second row
+   */
+  private static void swapRows(Rational[][] a, int r1, int r2) {
+    Rational[] tmp = a[r1];
+    a[r1] = a[r2];
+    a[r2] = tmp;
+  }
+
+  /**
+   * Normalizes a row so that the pivot element becomes 1. This is done by multiplying the entire
+   * row by the inverse of the pivot value.
+   *
+   * @param a the matrix
+   * @param row the row to normalize
+   * @param col the column where the pivot is located
+   * @param n total number of columns
+   */
+  private static void normalizeRow(Rational[][] a, int row, int col, int n) {
+    Rational inv = new Rational(a[row][col].den, a[row][col].num);
+    for (int j = col; j < n; j++) {
+      a[row][j] = a[row][j].mul(inv);
+    }
+  }
+
+  /**
+   * Eliminates all other non-zero values in a pivot column by subtracting appropriate multiples of
+   * the pivot row from other rows.
+   *
+   * @param a the matrix
+   * @param row the pivot row
+   * @param col the pivot column
+   * @param m total number of rows
+   * @param n total number of columns
+   */
+  private static void eliminateColumn(Rational[][] a, int row, int col, int m, int n) {
+    for (int i = 0; i < m; i++) {
+      if (i != row && !a[i][col].isZero()) {
+        Rational factor = a[i][col];
+        for (int j = col; j < n; j++) {
+          a[i][j] = a[i][j].sub(factor.mul(a[row][j]));
+        }
+      }
+    }
+  }
+
+  /**
+   * Builds one integer basis vector of the nullspace for a given free variable.
+   *
+   * @param a the matrix already in RREF
+   * @param pivots pivot map from gaussianElimination
+   * @param freeVars list of free variable column indices
+   * @param free the free variable column for which to build the vector
+   * @param n number of columns
+   * @return an integer array representing the basis vector
+   */
+  static int[] buildBasisVector(
+      Rational[][] a, int[] pivots, List<Integer> freeVars, int free, int n) {
+    Rational[] vec = new Rational[n];
+    for (int j = 0; j < n; j++) vec[j] = new Rational(0);
+    vec[free] = new Rational(1);
+
+    for (int j = 0; j < n; j++) {
+      if (pivots[j] != -1) {
+        Rational sum = new Rational(0);
+        for (int f : freeVars) sum = sum.add(a[pivots[j]][f].mul(vec[f]));
+        vec[j] = sum.negate();
+      }
+    }
+
+    long lcmVal = 1;
+    for (Rational r : vec) lcmVal = lcm(lcmVal, r.den);
+
+    int[] intVec = new int[n];
+    for (int j = 0; j < n; j++) intVec[j] = (int) (vec[j].num * (lcmVal / vec[j].den));
+
+    int g = gcdArray(intVec);
+    if (g != 0) for (int j = 0; j < n; j++) intVec[j] /= g;
+
+    return intVec;
+  }
+
+  /**
+   * Computes the nullspace (kernel) of matrix w using Gaussian elimination. The nullspace contains
+   * all vectors x such that w*x = 0.
+   *
+   * @param w the input matrix (m x n)
    * @return a list of basis vectors for the nullspace, each as an integer array of length n.
    *     Returns an empty list if the nullspace is trivial (only the zero vector).
    */
-  public static List<int[]> compute(int[][] W) {
-    int m = W.length, n = W[0].length;
-    Rational[][] A = new Rational[m][n];
-
-    // Convert integer matrix to rational matrix
-    for (int i = 0; i < m; i++) for (int j = 0; j < n; j++) A[i][j] = new Rational(W[i][j]);
-
-    int rank = 0;
+  public static List<int[]> compute(int[][] w) {
+    int n = w[0].length;
+    Rational[][] a = toRational(w);
     int[] pivots = new int[n];
-    Arrays.fill(pivots, -1);
+    gaussianElimination(a, pivots);
 
-    // Gaussian elimination: reduce to row echelon form
-    for (int col = 0, row = 0; col < n && row < m; col++) {
-      // Find non-zero pivot in current column
-      int sel = -1;
-      for (int i = row; i < m; i++)
-        if (!A[i][col].isZero()) {
-          sel = i;
-          break;
-        }
-      if (sel == -1) continue; // All zeros in column, it's a free variable
-
-      // Swap rows to put pivot in correct position
-      Rational[] tmp = A[row];
-      A[row] = A[sel];
-      A[sel] = tmp;
-
-      // Normalize pivot row (make pivot = 1)
-      Rational inv = new Rational(A[row][col].den, A[row][col].num);
-      for (int j = col; j < n; j++) A[row][j] = A[row][j].mul(inv);
-
-      // Eliminate column in all other rows
-      for (int i = 0; i < m; i++) {
-        if (i != row && !A[i][col].isZero()) {
-          Rational factor = A[i][col];
-          for (int j = col; j < n; j++) A[i][j] = A[i][j].sub(factor.mul(A[row][j]));
-        }
-      }
-      pivots[col] = row;
-      row++;
-      rank++;
-    }
-
-    // Identify free variables (columns without pivots)
     List<Integer> freeVars = new ArrayList<>();
     for (int j = 0; j < n; j++) if (pivots[j] == -1) freeVars.add(j);
 
-    // Build nullspace basis
     List<int[]> basis = new ArrayList<>();
-    for (int free : freeVars) {
-      // Create vector with 1 in free variable and solve for others
-      Rational[] vec = new Rational[n];
-      for (int j = 0; j < n; j++) vec[j] = new Rational(0);
-      vec[free] = new Rational(1);
-
-      // For each dependent variable, compute its value
-      for (int j = 0; j < n; j++) {
-        if (pivots[j] != -1) {
-          Rational sum = new Rational(0);
-          for (int f : freeVars) sum = sum.add(A[pivots[j]][f].mul(vec[f]));
-          vec[j] = sum.negate();
-        }
-      }
-
-      // Convert rational vector to integer vector
-      long lcm = 1;
-      for (Rational r : vec) {
-        long d = r.den;
-        lcm = lcm(lcm, d);
-      }
-
-      int[] intVec = new int[n];
-      for (int j = 0; j < n; j++) intVec[j] = (int) (vec[j].num * (lcm / vec[j].den));
-
-      // Reduce vector by dividing by GCD
-      int g = gcdArray(intVec);
-      if (g != 0) for (int j = 0; j < n; j++) intVec[j] /= g;
-
-      basis.add(intVec);
-    }
+    for (int free : freeVars) basis.add(buildBasisVector(a, pivots, freeVars, free, n));
     return basis;
   }
 
   /**
-   * Computes the least common multiple of two numbers. Uses the formula: lcm(a, b) = (a * b) /
-   * gcd(a, b)
+   * Computes the least common multiple of two numbers.
    *
    * @param a the first number
    * @param b the second number
@@ -245,7 +307,7 @@ class Nullspace {
   }
 
   /**
-   * Computes the greatest common divisor of two numbers using Euclid's algorithm.
+   * Computes the greatest common divisor of two long numbers using Euclid's algorithm.
    *
    * @param a the first number
    * @param b the second number
@@ -256,8 +318,7 @@ class Nullspace {
   }
 
   /**
-   * Computes the GCD of all elements in an array. The result is the largest integer that divides
-   * all array elements.
+   * Computes the GCD of all elements in an array.
    *
    * @param arr the array of integers
    * @return the GCD of all elements in the array

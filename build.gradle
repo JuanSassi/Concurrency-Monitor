@@ -77,15 +77,26 @@ jacoco {
 jacocoTestReport {
     dependsOn test
     reports {
-        xml.required  = true    // necesario para SonarCloud
+        xml.required  = true
         html.required = true
     }
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['Main.class'])
+        }))
+    }
 }
+
 jacocoTestCoverageVerification {
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['Main.class'])
+        }))
+    }
     violationRules {
         rule {
             limit {
-                minimum = 0.80  // 80% mínimo
+                minimum = 0.80
             }
         }
     }

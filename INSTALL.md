@@ -15,3 +15,5 @@ cd Concurrency-Monitor
 ./gradlew test
 ./gradlew test && xdg-open build/reports/tests/test/index.html
 ./gradlew test jacocoTestReport && xdg-open build/reports/jacoco/test/html/index.html
+
+./gradlew spotlessApply

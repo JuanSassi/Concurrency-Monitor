@@ -12,21 +12,21 @@ class Matrix {
 
   /**
    * Subtracts two matrices element by element. Both matrices must have the same dimensions. The
-   * operation is performed as C[i][j] = A[i][j] - B[i][j] for all valid indices i and j.
+   * operation is performed as c[i][j] = a[i][j] - b[i][j] for all valid indices i and j.
    *
    * <p>Note: This method assumes both matrices have at least one row and one column. The behavior
    * is undefined if either matrix is empty.
    *
-   * @param A the first matrix (minuend)
-   * @param B the second matrix (subtrahend), must have the same dimensions as A
-   * @return a new matrix C = A - B with the same dimensions as the input matrices
+   * @param a the first matrix (minuend)
+   * @param b the second matrix (subtrahend), must have the same dimensions as a
+   * @return a new matrix c = a - b with the same dimensions as the input matrices
    * @throws ArrayIndexOutOfBoundsException if matrices have different dimensions
    */
-  public static int[][] subtract(int[][] A, int[][] B) {
-    int rows = A.length, cols = A[0].length;
-    int[][] C = new int[rows][cols];
-    for (int i = 0; i < rows; i++) for (int j = 0; j < cols; j++) C[i][j] = A[i][j] - B[i][j];
-    return C;
+  public static int[][] subtract(int[][] a, int[][] b) {
+    int rows = a.length, cols = a[0].length;
+    int[][] c = new int[rows][cols];
+    for (int i = 0; i < rows; i++) for (int j = 0; j < cols; j++) c[i][j] = a[i][j] - b[i][j];
+    return c;
   }
 
   /**
@@ -39,19 +39,19 @@ class Matrix {
    * <p>Note: This method assumes the matrix has at least one row and one column. The behavior is
    * undefined if the matrix is empty.
    *
-   * @param W the matrix to transpose (m × n)
-   * @return a new matrix that is the transpose of W (n × m), where result[j][i] = W[i][j] for all
+   * @param w the matrix to transpose (m × n)
+   * @return a new matrix that is the transpose of w (n × m), where result[j][i] = w[i][j] for all
    *     valid indices
    */
-  public static int[][] transposed(int[][] W) {
-    int rows = W.length;
-    int cols = W[0].length;
-    int[][] Wtransposed = new int[cols][rows];
+  public static int[][] transposed(int[][] w) {
+    int rows = w.length;
+    int cols = w[0].length;
+    int[][] wtransposed = new int[cols][rows];
     for (int i = 0; i < rows; i++) {
       for (int j = 0; j < cols; j++) {
-        Wtransposed[j][i] = W[i][j];
+        wtransposed[j][i] = w[i][j];
       }
     }
-    return Wtransposed;
+    return wtransposed;
   }
 }

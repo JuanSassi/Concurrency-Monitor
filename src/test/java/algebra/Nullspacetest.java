@@ -1,4 +1,3 @@
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,19 +46,19 @@ class NullspaceTest {
   @Test
   @DisplayName("gcdArray([6, 9, 3]) → 3")
   void testGcdArray() {
-    assertEquals(3, Nullspace.gcdArray(new int[]{6, 9, 3}));
+    assertEquals(3, Nullspace.gcdArray(new int[] {6, 9, 3}));
   }
 
   @Test
   @DisplayName("gcdArray([0, 0, 0]) → 0")
   void testGcdArrayAllZeros() {
-    assertEquals(0, Nullspace.gcdArray(new int[]{0, 0, 0}));
+    assertEquals(0, Nullspace.gcdArray(new int[] {0, 0, 0}));
   }
 
   @Test
   @DisplayName("gcdArray([5]) → 5")
   void testGcdArraySingle() {
-    assertEquals(5, Nullspace.gcdArray(new int[]{5}));
+    assertEquals(5, Nullspace.gcdArray(new int[] {5}));
   }
 
   // ── Rational ─────────────────────────────────────────────

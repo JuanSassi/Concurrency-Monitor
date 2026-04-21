@@ -255,10 +255,9 @@ class Nullspace {
 
     int[] intVec = new int[n];
     for (int j = 0; j < n; j++) {
-      // Cambio: Usar Math.multiplyExact o asegurar el orden de operación
-      // para evitar advertencias de desbordamiento de SpotBugs.
       long factor = lcmVal / vec[j].den;
-      intVec[j] = (int) (vec[j].num * factor);
+      long resultLong = vec[j].num * factor;
+      intVec[j] = (int) resultLong; 
     }
 
     int g = gcdArray(intVec);
@@ -324,7 +323,7 @@ class Nullspace {
    */
   public static int gcdArray(int[] arr) {
     int g = 0;
-    for (int x : arr) g = gcdInt(g, x); // Usa la versión de int explícitamente
+    for (int x : arr) g = gcdInt(g, x);
     return g;
   }
 

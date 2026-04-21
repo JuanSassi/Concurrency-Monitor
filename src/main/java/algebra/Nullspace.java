@@ -210,6 +210,10 @@ class Nullspace {
    * @param n total number of columns
    */
   private static void normalizeRow(Rational[][] a, int row, int col, int n) {
+    if (a[row][col].isZero()) {
+      throw new ArithmeticException("Pivot is zero, cannot normalize row");
+    }
+
     Rational inv = new Rational(a[row][col].den, a[row][col].num);
     for (int j = col; j < n; j++) {
       a[row][j] = a[row][j].mul(inv);
@@ -249,6 +253,7 @@ class Nullspace {
    */
   static int[] buildBasisVector(
       Rational[][] a, int[] pivots, List<Integer> freeVars, int free, int n) {
+
     Rational[] vec = new Rational[n];
     for (int j = 0; j < n; j++) vec[j] = new Rational(0);
     vec[free] = new Rational(1);
@@ -265,7 +270,16 @@ class Nullspace {
     for (Rational r : vec) lcmVal = lcm(lcmVal, r.den);
 
     int[] intVec = new int[n];
-    for (int j = 0; j < n; j++) intVec[j] = (int) (vec[j].num * (lcmVal / vec[j].den));
+    for (int j = 0; j < n; j++) {
+      long value = vec[j].num * (lcmVal / vec[j].den);
+
+      // Protección básica overflow int
+      if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
+        throw new ArithmeticException("Integer overflow in basis vector");
+      }
+
+      intVec[j] = (int) value;
+    }
 
     int g = gcdArray(intVec);
     if (g != 0) for (int j = 0; j < n; j++) intVec[j] /= g;
@@ -282,6 +296,10 @@ class Nullspace {
    *     Returns an empty list if the nullspace is trivial (only the zero vector).
    */
   public static List<int[]> compute(int[][] w) {
+    if (w == null || w.length == 0 || w[0] == null || w[0].length == 0) {
+      throw new IllegalArgumentException("Matrix must not be null or empty");
+    }
+
     int n = w[0].length;
     Rational[][] a = toRational(w);
     int[] pivots = new int[n];
@@ -303,7 +321,8 @@ class Nullspace {
    * @return the LCM of a and b
    */
   public static long lcm(long a, long b) {
-    return a / gcd(a, b) * b;
+    if (a == 0 || b == 0) return 0;
+    return Math.abs((a / gcd(a, b)) * b);
   }
 
   /**
@@ -324,6 +343,8 @@ class Nullspace {
    * @return the GCD of all elements in the array
    */
   public static int gcdArray(int[] arr) {
+    if (arr == null || arr.length == 0) return 0;
+
     int g = 0;
     for (int x : arr) g = gcd(g, Math.abs(x));
     return g;

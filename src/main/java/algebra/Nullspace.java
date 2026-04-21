@@ -201,7 +201,8 @@ class Nullspace {
   }
 
   /**
-   * Builds one integer basis vector of the nullspace for a given free variable.
+   * Builds one integer basis vector of the nullspace for a given free variable. This method has
+   * been refactored to reduce cyclomatic complexity.
    *
    * @param a the matrix already in RREF
    * @param pivots pivot map from gaussianElimination
@@ -212,27 +213,57 @@ class Nullspace {
    */
   static int[] buildBasisVector(
       Rational[][] a, int[] pivots, List<Integer> freeVars, int free, int n) {
-    Rational[] vec = new Rational[n];
-    for (int j = 0; j < n; j++) vec[j] = new Rational(0);
-    vec[free] = new Rational(1);
+    Rational[] vec = initializeRationalVector(n, free);
 
+    // Calculate values for pivot positions
     for (int j = 0; j < n; j++) {
       if (pivots[j] != -1) {
-        Rational sum = new Rational(0);
-        for (int f : freeVars) sum = sum.add(a[pivots[j]][f].mul(vec[f]));
-        vec[j] = sum.negate();
+        vec[j] = calculatePivotValue(a, pivots[j], freeVars, vec);
       }
     }
 
+    return convertToReducedIntegerArray(vec);
+  }
+
+  /** Helper to initialize a rational vector with a 1 in the free variable position. */
+  private static Rational[] initializeRationalVector(int n, int free) {
+    Rational[] vec = new Rational[n];
+    for (int j = 0; j < n; j++) {
+      vec[j] = new Rational(0);
+    }
+    vec[free] = new Rational(1);
+    return vec;
+  }
+
+  /** Helper to calculate the value of a pivot variable based on free variables. */
+  private static Rational calculatePivotValue(
+      Rational[][] a, int pivotRow, List<Integer> freeVars, Rational[] vec) {
+    Rational sum = new Rational(0);
+    for (int f : freeVars) {
+      sum = sum.add(a[pivotRow][f].mul(vec[f]));
+    }
+    return sum.negate();
+  }
+
+  /** Helper to convert Rational array to its simplest integer form. */
+  private static int[] convertToReducedIntegerArray(Rational[] vec) {
+    int n = vec.length;
     long lcmVal = 1;
-    for (Rational r : vec) lcmVal = lcm(lcmVal, r.den);
+    for (Rational r : vec) {
+      lcmVal = lcm(lcmVal, r.den);
+    }
 
     int[] intVec = new int[n];
-    for (int j = 0; j < n; j++) intVec[j] = (int) (vec[j].num * (lcmVal / vec[j].den));
+    for (int j = 0; j < n; j++) {
+      intVec[j] = (int) (vec[j].num * (lcmVal / vec[j].den));
+    }
 
     int g = gcdArray(intVec);
-    if (g != 0) for (int j = 0; j < n; j++) intVec[j] /= g;
-
+    if (g != 0) {
+      for (int j = 0; j < n; j++) {
+        intVec[j] /= g;
+      }
+    }
     return intVec;
   }
 

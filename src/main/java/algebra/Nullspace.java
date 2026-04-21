@@ -167,17 +167,6 @@ class Nullspace {
     }
   }
 
-  /**
-   * Finds a pivot row for a given column starting from a specific row. A pivot is the first
-   * non-zero element in the column below (or at) the given row.
-   *
-   * @param a the matrix in rational form
-   * @param row the starting row for the search
-   * @param col the column where the pivot is searched
-   * @param m total number of rows
-   * @return the index of a row with a non-zero element in the given column, or -1 if no such row
-   *     exists
-   */
   private static int findPivot(Rational[][] a, int row, int col, int m) {
     for (int i = row; i < m; i++) {
       if (!a[i][col].isZero()) {
@@ -187,49 +176,19 @@ class Nullspace {
     return -1;
   }
 
-  /**
-   * Swaps two rows of the matrix in-place.
-   *
-   * @param a the matrix
-   * @param r1 index of the first row
-   * @param r2 index of the second row
-   */
   private static void swapRows(Rational[][] a, int r1, int r2) {
     Rational[] tmp = a[r1];
     a[r1] = a[r2];
     a[r2] = tmp;
   }
 
-  /**
-   * Normalizes a row so that the pivot element becomes 1. This is done by multiplying the entire
-   * row by the inverse of the pivot value.
-   *
-   * @param a the matrix
-   * @param row the row to normalize
-   * @param col the column where the pivot is located
-   * @param n total number of columns
-   */
   private static void normalizeRow(Rational[][] a, int row, int col, int n) {
-    if (a[row][col].isZero()) {
-      throw new ArithmeticException("Pivot is zero, cannot normalize row");
-    }
-
     Rational inv = new Rational(a[row][col].den, a[row][col].num);
     for (int j = col; j < n; j++) {
       a[row][j] = a[row][j].mul(inv);
     }
   }
 
-  /**
-   * Eliminates all other non-zero values in a pivot column by subtracting appropriate multiples of
-   * the pivot row from other rows.
-   *
-   * @param a the matrix
-   * @param row the pivot row
-   * @param col the pivot column
-   * @param m total number of rows
-   * @param n total number of columns
-   */
   private static void eliminateColumn(Rational[][] a, int row, int col, int m, int n) {
     for (int i = 0; i < m; i++) {
       if (i != row && !a[i][col].isZero()) {
@@ -253,7 +212,6 @@ class Nullspace {
    */
   static int[] buildBasisVector(
       Rational[][] a, int[] pivots, List<Integer> freeVars, int free, int n) {
-
     Rational[] vec = new Rational[n];
     for (int j = 0; j < n; j++) vec[j] = new Rational(0);
     vec[free] = new Rational(1);
@@ -270,16 +228,7 @@ class Nullspace {
     for (Rational r : vec) lcmVal = lcm(lcmVal, r.den);
 
     int[] intVec = new int[n];
-    for (int j = 0; j < n; j++) {
-      long value = vec[j].num * (lcmVal / vec[j].den);
-
-      // Protección básica overflow int
-      if (value > Integer.MAX_VALUE || value < Integer.MIN_VALUE) {
-        throw new ArithmeticException("Integer overflow in basis vector");
-      }
-
-      intVec[j] = (int) value;
-    }
+    for (int j = 0; j < n; j++) intVec[j] = (int) (vec[j].num * (lcmVal / vec[j].den));
 
     int g = gcdArray(intVec);
     if (g != 0) for (int j = 0; j < n; j++) intVec[j] /= g;
@@ -296,10 +245,6 @@ class Nullspace {
    *     Returns an empty list if the nullspace is trivial (only the zero vector).
    */
   public static List<int[]> compute(int[][] w) {
-    if (w == null || w.length == 0 || w[0] == null || w[0].length == 0) {
-      throw new IllegalArgumentException("Matrix must not be null or empty");
-    }
-
     int n = w[0].length;
     Rational[][] a = toRational(w);
     int[] pivots = new int[n];
@@ -321,8 +266,7 @@ class Nullspace {
    * @return the LCM of a and b
    */
   public static long lcm(long a, long b) {
-    if (a == 0 || b == 0) return 0;
-    return Math.abs((a / gcd(a, b)) * b);
+    return a / gcd(a, b) * b;
   }
 
   /**
@@ -343,8 +287,6 @@ class Nullspace {
    * @return the GCD of all elements in the array
    */
   public static int gcdArray(int[] arr) {
-    if (arr == null || arr.length == 0) return 0;
-
     int g = 0;
     for (int x : arr) g = gcd(g, Math.abs(x));
     return g;

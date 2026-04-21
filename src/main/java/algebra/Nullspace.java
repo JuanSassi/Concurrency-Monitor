@@ -257,7 +257,7 @@ class Nullspace {
     for (int j = 0; j < n; j++) {
       long factor = lcmVal / vec[j].den;
       long resultLong = vec[j].num * factor;
-      intVec[j] = (int) resultLong; 
+      intVec[j] = (int) resultLong;
     }
 
     int g = gcdArray(intVec);

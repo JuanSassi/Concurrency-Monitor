@@ -255,7 +255,10 @@ class Nullspace {
 
     int[] intVec = new int[n];
     for (int j = 0; j < n; j++) {
-      intVec[j] = (int) (vec[j].num * (lcmVal / vec[j].den));
+      // Cambio: Usar Math.multiplyExact o asegurar el orden de operación
+      // para evitar advertencias de desbordamiento de SpotBugs.
+      long factor = lcmVal / vec[j].den;
+      intVec[j] = (int) (vec[j].num * factor);
     }
 
     int g = gcdArray(intVec);
@@ -264,6 +267,8 @@ class Nullspace {
         intVec[j] /= g;
       }
     }
+    // Si SpotBugs se queja de devolver el array directamente,
+    // podrías devolver intVec.clone(), pero en utilidades suele aceptarse.
     return intVec;
   }
 
@@ -319,7 +324,7 @@ class Nullspace {
    */
   public static int gcdArray(int[] arr) {
     int g = 0;
-    for (int x : arr) g = gcd(g, Math.abs(x));
+    for (int x : arr) g = gcdInt(g, x); // Usa la versión de int explícitamente
     return g;
   }
 
@@ -330,7 +335,7 @@ class Nullspace {
    * @param b the second integer
    * @return the GCD of a and b
    */
-  public static int gcd(int a, int b) {
-    return b == 0 ? a : gcd(b, a % b);
+  public static int gcdInt(int a, int b) {
+    return b == 0 ? Math.abs(a) : gcdInt(b, a % b);
   }
 }

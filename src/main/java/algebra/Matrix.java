@@ -4,9 +4,8 @@
  *
  * @author Sassi Juan Ignacio
  */
-
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 
 class Matrix {
   /** Private constructor to prevent instantiation of this utility class. */

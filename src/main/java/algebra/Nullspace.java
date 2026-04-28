@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,188 +15,6 @@ class Nullspace {
   /** Private constructor to prevent instantiation of this utility class. */
   private Nullspace() {
     // Utility class, no instances allowed
-  }
-
-  /**
-   * Inner class representing rational numbers with exact precision. Uses long integer arithmetic to
-   * avoid rounding errors that would occur with floating-point arithmetic. All rationals are
-   * automatically reduced to canonical form (lowest terms with positive denominator).
-   *
-   * <p>This class is essential for exact Gaussian elimination, as it prevents the accumulation of
-   * floating-point errors that would compromise the accuracy of the nullspace computation.
-   */
-  static class Rational {
-    /** The numerator of the rational number */
-    long num;
-
-    /** The denominator of the rational number (always positive after construction) */
-    long den;
-
-    /**
-     * Constructs a rational number and reduces it to canonical form. The rational is reduced to
-     * lowest terms using GCD, and the sign is normalized to be in the numerator.
-     *
-     * @param n the numerator
-     * @param d the denominator (must not be zero)
-     * @throws ArithmeticException if the denominator is zero
-     */
-    Rational(long n, long d) {
-      if (d == 0) throw new ArithmeticException("Denominator zero");
-      long g = gcd(Math.abs(n), Math.abs(d));
-      n /= g;
-      d /= g;
-      if (d < 0) {
-        n = -n;
-        d = -d;
-      }
-      this.num = n;
-      this.den = d;
-    }
-
-    /**
-     * Constructs a rational number from an integer. Equivalent to creating the rational n/1.
-     *
-     * @param n the integer value
-     */
-    Rational(long n) {
-      this(n, 1);
-    }
-
-    /**
-     * Adds this rational to another rational.
-     *
-     * @param r the rational to add
-     * @return a new rational representing the sum
-     */
-    public Rational add(Rational r) {
-      return new Rational(this.num * r.den + r.num * this.den, this.den * r.den);
-    }
-
-    /**
-     * Subtracts another rational from this rational.
-     *
-     * @param r the rational to subtract
-     * @return a new rational representing the difference
-     */
-    public Rational sub(Rational r) {
-      return new Rational(this.num * r.den - r.num * this.den, this.den * r.den);
-    }
-
-    /**
-     * Multiplies this rational by another rational.
-     *
-     * @param r the rational to multiply by
-     * @return a new rational representing the product
-     */
-    public Rational mul(Rational r) {
-      return new Rational(this.num * r.num, this.den * r.den);
-    }
-
-    /**
-     * Returns the negation of this rational.
-     *
-     * @return a new rational representing -this
-     */
-    public Rational negate() {
-      return new Rational(-this.num, this.den);
-    }
-
-    /**
-     * Checks if this rational is zero.
-     *
-     * @return true if this rational equals zero, false otherwise
-     */
-    public boolean isZero() {
-      return num == 0;
-    }
-
-    /**
-     * Computes the greatest common divisor using Euclid's algorithm.
-     *
-     * @param a the first number (non-negative)
-     * @param b the second number (non-negative)
-     * @return the GCD of a and b
-     */
-    private static long gcd(long a, long b) {
-      while (b != 0) {
-        long t = b;
-        b = a % b;
-        a = t;
-      }
-      return a;
-    }
-  }
-
-  /**
-   * Converts an integer matrix to a rational matrix.
-   *
-   * @param w the integer matrix (m x n)
-   * @return a new Rational matrix with the same values
-   */
-  static Rational[][] toRational(int[][] w) {
-    int m = w.length, n = w[0].length;
-    Rational[][] a = new Rational[m][n];
-    for (int i = 0; i < m; i++) for (int j = 0; j < n; j++) a[i][j] = new Rational(w[i][j]);
-    return a;
-  }
-
-  /**
-   * Reduces a rational matrix to reduced row echelon form (RREF) in-place using Gaussian
-   * elimination, and records the pivot column for each row.
-   *
-   * @param a the rational matrix to reduce (modified in-place)
-   * @param pivots array of length n; pivots[col] is set to the row index of the pivot in that
-   *     column, or -1 if the column is free
-   */
-  static void gaussianElimination(Rational[][] a, int[] pivots) {
-    int m = a.length, n = a[0].length;
-    Arrays.fill(pivots, -1);
-
-    int row = 0;
-    for (int col = 0; col < n && row < m; col++) {
-      int sel = findPivot(a, row, col, m);
-      if (sel == -1) continue;
-
-      swapRows(a, row, sel);
-      normalizeRow(a, row, col, n);
-      eliminateColumn(a, row, col, m, n);
-
-      pivots[col] = row;
-      row++;
-    }
-  }
-
-  private static int findPivot(Rational[][] a, int row, int col, int m) {
-    for (int i = row; i < m; i++) {
-      if (!a[i][col].isZero()) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static void swapRows(Rational[][] a, int r1, int r2) {
-    Rational[] tmp = a[r1];
-    a[r1] = a[r2];
-    a[r2] = tmp;
-  }
-
-  private static void normalizeRow(Rational[][] a, int row, int col, int n) {
-    Rational inv = new Rational(a[row][col].den, a[row][col].num);
-    for (int j = col; j < n; j++) {
-      a[row][j] = a[row][j].mul(inv);
-    }
-  }
-
-  private static void eliminateColumn(Rational[][] a, int row, int col, int m, int n) {
-    for (int i = 0; i < m; i++) {
-      if (i != row && !a[i][col].isZero()) {
-        Rational factor = a[i][col];
-        for (int j = col; j < n; j++) {
-          a[i][j] = a[i][j].sub(factor.mul(a[row][j]));
-        }
-      }
-    }
   }
 
   /**
@@ -218,14 +35,20 @@ class Nullspace {
     // Calculate values for pivot positions
     for (int j = 0; j < n; j++) {
       if (pivots[j] != -1) {
-        vec[j] = calculatePivotValue(a, pivots[j], freeVars, vec);
+        vec[j] = Matrix.calculatePivotValue(a, pivots[j], freeVars, vec);
       }
     }
 
     return convertToReducedIntegerArray(vec);
   }
 
-  /** Helper to initialize a rational vector with a 1 in the free variable position. */
+  /**
+   * Helper to initialize a rational vector with a 1 in the free variable position.
+   *
+   * @param n the length of the vector
+   * @param free the index of the free variable column
+   * @return a Rational array initialized with zeros and a one at the free index
+   */
   private static Rational[] initializeRationalVector(int n, int free) {
     Rational[] vec = new Rational[n];
     for (int j = 0; j < n; j++) {
@@ -235,22 +58,26 @@ class Nullspace {
     return vec;
   }
 
-  /** Helper to calculate the value of a pivot variable based on free variables. */
-  private static Rational calculatePivotValue(
-      Rational[][] a, int pivotRow, List<Integer> freeVars, Rational[] vec) {
-    Rational sum = new Rational(0);
-    for (int f : freeVars) {
-      sum = sum.add(a[pivotRow][f].mul(vec[f]));
-    }
-    return sum.negate();
-  }
-
-  /** Helper to convert Rational array to its simplest integer form. */
+  /**
+   * Converts a vector of {@link Rational} numbers to its simplest equivalent integer form. *
+   *
+   * <p>The conversion process follows these steps:
+   *
+   * <ol>
+   *   <li>Finds the Least Common Multiple (LCM) of all denominators to eliminate fractions.
+   *   <li>Scales each rational number by the LCM to obtain an initial integer vector.
+   *   <li>Reduces the resulting integer vector by dividing all elements by their Greatest Common
+   *       Divisor (GCD) to ensure the simplest representation.
+   * </ol>
+   *
+   * @param vec the array of {@link Rational} numbers to convert
+   * @return a new integer array representing the simplified basis vector
+   */
   private static int[] convertToReducedIntegerArray(Rational[] vec) {
     int n = vec.length;
     long lcmVal = 1;
     for (Rational r : vec) {
-      lcmVal = lcm(lcmVal, r.den);
+      lcmVal = Rational.lcm(lcmVal, r.den);
     }
 
     int[] intVec = new int[n];
@@ -260,7 +87,7 @@ class Nullspace {
       intVec[j] = (int) resultLong;
     }
 
-    int g = gcdArray(intVec);
+    int g = Matrix.gcdArray(intVec);
     if (g != 0) {
       for (int j = 0; j < n; j++) {
         intVec[j] /= g;
@@ -281,9 +108,9 @@ class Nullspace {
    */
   public static List<int[]> compute(int[][] w) {
     int n = w[0].length;
-    Rational[][] a = toRational(w);
+    Rational[][] a = Matrix.toRational(w);
     int[] pivots = new int[n];
-    gaussianElimination(a, pivots);
+    Matrix.gaussianElimination(a, pivots);
 
     List<Integer> freeVars = new ArrayList<>();
     for (int j = 0; j < n; j++) if (pivots[j] == -1) freeVars.add(j);
@@ -291,50 +118,5 @@ class Nullspace {
     List<int[]> basis = new ArrayList<>();
     for (int free : freeVars) basis.add(buildBasisVector(a, pivots, freeVars, free, n));
     return basis;
-  }
-
-  /**
-   * Computes the least common multiple of two numbers.
-   *
-   * @param a the first number
-   * @param b the second number
-   * @return the LCM of a and b
-   */
-  public static long lcm(long a, long b) {
-    return a / gcd(a, b) * b;
-  }
-
-  /**
-   * Computes the greatest common divisor of two long numbers using Euclid's algorithm.
-   *
-   * @param a the first number
-   * @param b the second number
-   * @return the GCD of a and b
-   */
-  public static long gcd(long a, long b) {
-    return b == 0 ? a : gcd(b, a % b);
-  }
-
-  /**
-   * Computes the GCD of all elements in an array.
-   *
-   * @param arr the array of integers
-   * @return the GCD of all elements in the array
-   */
-  public static int gcdArray(int[] arr) {
-    int g = 0;
-    for (int x : arr) g = gcdInt(g, x);
-    return g;
-  }
-
-  /**
-   * Computes the greatest common divisor of two integers using Euclid's algorithm.
-   *
-   * @param a the first integer
-   * @param b the second integer
-   * @return the GCD of a and b
-   */
-  public static int gcdInt(int a, int b) {
-    return b == 0 ? Math.abs(a) : gcdInt(b, a % b);
   }
 }

@@ -4,7 +4,7 @@
  *
  * @author Sassi Juan Ignacio
  */
-public class Main {
+/*public class Main {
 
   public static void main(String[] args) {
 
@@ -63,5 +63,14 @@ public class Main {
     for (int i = 0; i < matrix.length; i++) {
       System.out.printf("  P%-2d %s%n", i, arrayToString(matrix[i]));
     }
+  }
+}*/
+
+public class Main {
+  public static void main(String[] args) {
+    int[][] w = Matrix.subtract(PetrinetLoader.getPostMatrix(), PetrinetLoader.getPreMatrix());
+    Invariants inv = new Invariants(w);
+    inv.printTInvariants();
+    inv.printPInvariants();
   }
 }

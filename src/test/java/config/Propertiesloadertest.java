@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
  * @author Sassi Juan Ignacio
  */
 @DisplayName("PropertiesLoader — error paths")
-class PropertiesLoaderTest {
+class Propertiesloadertest {
 
   // ── getBoolean ───────────────────────────────────────────
 

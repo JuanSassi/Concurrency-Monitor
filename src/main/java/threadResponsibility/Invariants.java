@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -216,7 +217,7 @@ public class Invariants {
    * @return list of minimal P-invariant vectors
    */
   public List<List<Integer>> getPInvariants() {
-    return pInvariant;
+    return Collections.unmodifiableList(pInvariant);
   }
 
   /**
@@ -225,6 +226,6 @@ public class Invariants {
    * @return list of minimal T-invariant vectors
    */
   public List<List<Integer>> getTInvariants() {
-    return tInvariant;
+    return Collections.unmodifiableList(tInvariant);
   }
 }

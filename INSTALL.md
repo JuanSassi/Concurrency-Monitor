@@ -18,3 +18,5 @@ cd Concurrency-Monitor
 
 ./gradlew spotlessApply
 ./gradlew checkstyleMain
+
+./gradlew spotbugsMain --info

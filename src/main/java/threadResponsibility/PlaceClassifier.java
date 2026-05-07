@@ -1,3 +1,4 @@
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -61,17 +62,23 @@ public class PlaceClassifier {
   /**
    * Constructs the classifier and performs automatic place classification.
    *
-   * <p>The incidence matrix W is computed internally as Post - Pre.
+   * <p>The incidence matrix W is computed internally as Post - Pre. Defensive copies of the input
+   * matrices and marking vector are made to prevent external modification.
    *
    * @param pre pre-incidence matrix of dimension [numPlaces][numTransitions]
    * @param post post-incidence matrix of dimension [numPlaces][numTransitions]
    * @param m0 initial marking vector of dimension [numPlaces]
    * @param invariants invariants calculator containing P-invariants and T-invariants
    */
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification =
+          "Invariants is effectively immutable: all fields are final and getters return"
+              + " unmodifiable views. No defensive copy is needed.")
   public PlaceClassifier(int[][] pre, int[][] post, int[] m0, Invariants invariants) {
-    this.pre = pre;
-    this.post = post;
-    this.m0 = m0;
+    this.pre = deepCopy(pre);
+    this.post = deepCopy(post);
+    this.m0 = m0.clone();
     this.w = Matrix.subtract(post, pre);
     this.numPlaces = pre.length;
     this.numTransitions = pre[0].length;
@@ -83,6 +90,20 @@ public class PlaceClassifier {
 
     classifyPlaces();
     this.paOfIt = computePaOfIt();
+  }
+
+  /**
+   * Returns a deep copy of a 2D integer matrix.
+   *
+   * @param matrix the matrix to copy
+   * @return a new matrix with the same values
+   */
+  private static int[][] deepCopy(int[][] matrix) {
+    int[][] copy = new int[matrix.length][];
+    for (int i = 0; i < matrix.length; i++) {
+      copy[i] = matrix[i].clone();
+    }
+    return copy;
   }
 
   /**

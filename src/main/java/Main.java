@@ -2,23 +2,36 @@ import java.util.List;
 
 public class Main {
   public static void main(String[] args) {
-    int[][] pre = PetrinetLoader.getPreMatrix();
-    int[][] post = PetrinetLoader.getPostMatrix();
-    int[] m0 = PetrinetLoader.getInitialMarkingVector();
-    int[][] w = Matrix.subtract(post, pre);
-    Invariants inv = new Invariants(w);
-    PlaceClassifier classifier = new PlaceClassifier(pre, post, m0, inv);
+    ThreadAllocator allocator = new ThreadAllocator();
 
-    ReachabilityTree tree = new ReachabilityTree(classifier.getActionPlaces());
+    System.out.println("=== Algorithm 4.1 ===");
+    System.out.println("Max active threads: " + allocator.getMaxActiveThreads());
+    System.out.println("Reachable markings: " + allocator.getTree().getNumReachableMarkings());
 
-    System.out.println("Action places (sorted): " + tree.getSortedActionPlaces());
-    System.out.println("Reachable markings:     " + tree.getNumReachableMarkings());
-    System.out.println("Max active threads:     " + tree.getMaxNumThreads());
+    System.out.println("\n=== Algorithm 4.2 ===");
+    System.out.println("Segments: " + allocator.getSegments());
+    System.out.println("Forks:    " + allocator.getResponsibilities().getForkPlaces());
+    System.out.println("Joins:    " + allocator.getResponsibilities().getJoinPlaces());
 
-    System.out.println("\nFirst 5 markings:");
-    List<int[]> markings = tree.getReachableMarkings();
-    for (int i = 0; i < Math.min(5, markings.size()); i++) {
-      System.out.println("  M" + i + " → " + java.util.Arrays.toString(markings.get(i)));
+    System.out.println("\n=== Algorithm 4.3 ===");
+    List<List<Integer>> segmentPlaces = allocator.computeAllSegmentPlaces();
+    List<Integer> threadsPerSegment = allocator.getThreadsPerSegment();
+    for (int i = 0; i < allocator.getSegments().size(); i++) {
+      System.out.println(
+          "S"
+              + (i + 1)
+              + " transitions="
+              + allocator.getSegments().get(i)
+              + " places="
+              + segmentPlaces.get(i)
+              + " maxThreads="
+              + threadsPerSegment.get(i));
+    }
+
+    System.out.println("\n=== PI of IT ===");
+    List<List<Integer>> piOfIt = allocator.computePiOfIt();
+    for (int i = 0; i < piOfIt.size(); i++) {
+      System.out.println("IT" + (i + 1) + " → " + piOfIt.get(i));
     }
   }
 }

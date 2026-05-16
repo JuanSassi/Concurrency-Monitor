@@ -33,5 +33,7 @@ public class Main {
     for (int i = 0; i < piOfIt.size(); i++) {
       System.out.println("IT" + (i + 1) + " → " + piOfIt.get(i));
     }
+
+    new AllocationLogger(allocator).logAll();
   }
 }

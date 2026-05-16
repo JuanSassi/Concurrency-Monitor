@@ -3,6 +3,7 @@ cat > .gitignore << 'EOF'
 # Gradle cache local — nunca al repo
 .gradle/
 build/
+*.log
 
 # IDEs
 .idea/

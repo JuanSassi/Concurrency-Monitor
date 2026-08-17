@@ -11,7 +11,7 @@ import java.util.Set;
  * <p>This class coordinates the full analysis pipeline:
  *
  * <ol>
- *   <li>Loads the Petri net structure from configuration
+ *   <li>Receives the Petri net structure via a {@link PetriNetDefinition}
  *   <li>Computes P-invariants and T-invariants ({@link Invariants})
  *   <li>Classifies places into action and resource places ({@link PlaceClassifier})
  *   <li>Builds the reachability tree ({@link ReachabilityTree})
@@ -20,6 +20,10 @@ import java.util.Set;
  *
  * <p>This class is a pure analysis component — it does not produce any log files or side effects.
  * Logging is the responsibility of the caller.
+ *
+ * <p>The {@code PetriNet} instance created here is exposed via {@link #getPetriNet()} so that
+ * whoever runs the simulation afterwards (e.g. a {@code Monitor}) can reuse the exact same instance
+ * — one analysis, one net, no shared global state.
  *
  * @see Invariants
  * @see PlaceClassifier
@@ -44,6 +48,9 @@ public class ThreadAllocator {
   /** Place classifier. */
   private final PlaceClassifier classifier;
 
+  /** Petri net instance built for this analysis run. */
+  private final PetriNet petriNet;
+
   /** Reachability tree over action places. */
   private final ReachabilityTree tree;
 
@@ -54,23 +61,39 @@ public class ThreadAllocator {
   private final List<List<Integer>> segments;
 
   /**
-   * Constructs a {@code ThreadAllocator} and runs the full analysis pipeline. All Petri net data is
-   * loaded from the properties file configured in {@code config.properties}.
+   * Constructs a {@code ThreadAllocator} using the Petri net configured in {@code
+   * config.properties} — same behaviour as before. Kept for backward compatibility with the console
+   * entry point ({@code Main}).
+   */
+  public ThreadAllocator() {
+    this(PetriNetDefinition.fromProperties());
+  }
+
+  /**
+   * Constructs a {@code ThreadAllocator} and runs the full analysis pipeline for the given net
+   * definition. This is the constructor a web layer should use: one call, one definition (from the
+   * catalog or from a user-submitted request), one isolated analysis — no shared static state
+   * between runs.
+   *
+   * @param definition the validated Petri net definition to analyze
    */
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
       justification =
-          "pre and post are loaded fresh from PetrinetLoader on each call —"
-              + " they are not shared references. No defensive copy needed.")
-  public ThreadAllocator() {
-    this.pre = PetrinetLoader.getPreMatrix();
-    this.post = PetrinetLoader.getPostMatrix();
-    int[] m0 = PetrinetLoader.getInitialMarkingVector();
+          "definition.pre()/post() already return defensive copies (PetriNetDefinition's own"
+              + " accessors clone internally). No further copy needed here.")
+  public ThreadAllocator(PetriNetDefinition definition) {
+    this.pre = definition.pre();
+    this.post = definition.post();
+    int[] m0 = definition.initialMarking();
     this.w = Matrix.subtract(post, pre);
 
     this.invariants = new Invariants(w);
     this.classifier = new PlaceClassifier(pre, post, m0, invariants);
-    this.tree = new ReachabilityTree(classifier.getActionPlaces());
+
+    this.petriNet = new PetriNet(pre, post, m0, definition.temporalTransitions());
+    this.tree = new ReachabilityTree(classifier.getActionPlaces(), petriNet);
+
     this.responsibilities =
         new Responsibilities(pre, post, invariants.getTInvariants(), classifier.getActionPlaces());
     this.segments = responsibilities.getSegments();
@@ -193,6 +216,24 @@ public class ThreadAllocator {
   }
 
   /**
+   * Returns the {@code PetriNet} instance built for this analysis, already restored to the initial
+   * marking. Pass this same instance to {@code Monitor} to run the simulation without creating a
+   * second, disconnected net.
+   *
+   * @return the analyzed Petri net, ready to be handed to a {@code Monitor}
+   */
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP",
+      justification =
+          "Intentional: the caller (typically code wiring up a Monitor) must reuse the exact"
+              + " same PetriNet instance that was analyzed here, not a copy — that's the whole"
+              + " point of exposing it. Returning a defensive copy would let the analysis and"
+              + " the simulation drift onto two different nets.")
+  public PetriNet getPetriNet() {
+    return petriNet;
+  }
+
+  /**
    * Returns the reachability tree built during analysis.
    *
    * @return the {@link ReachabilityTree} instance
@@ -222,5 +263,52 @@ public class ThreadAllocator {
               + " unmodifiable views.")
   public Invariants getInvariants() {
     return invariants;
+  }
+
+  /** 
+  * === Algorithm 1 ===
+  * 
+  * 1 Obtener los IT de la RdP
+  * 
+  * 2 Para cada IT obtener el conjunto de plazas asociadas al IT en análisis
+  * 
+  * 3 Determinar las plazas relacionadas a acciones de cada IT
+  * 
+  * 4 Del árbol de alcanzabilidad de la RdP, se debe obtener MA
+  * MA es el conjunto de todos los marcados posibles de todos los conjuntos de plazas.
+  * 
+  *  5 De cada marcado posible (estado) del conjunto MA se debe realizar la suma de las marcas. 
+  * De todas estas sumas, se debe buscar la de mayor valor (marcado máximo). 
+  * Esta será la cantidad máxima de hilos activos simultáneos en el sistema.
+  * 
+  */
+  public void Algorithm1(){
+    System.out.println("=== Algorithm 4.1 ===");
+    Algorithm11();
+    Algorithm12();
+    Algorithm13();
+    Algorithm14();
+    Algorithm15();
+  }
+
+  public void Algorithm11(){
+    invariants.printPInvariants();
+  }
+
+  public void Algorithm12(){
+    
+  }
+
+  public void Algorithm13(){
+    
+  }
+
+  public void Algorithm14(){
+    
+  }
+
+  public void Algorithm15(){
+    System.out.println("Max active threads: " + getMaxActiveThreads());
+    System.out.println("Reachable markings: " + getTree().getNumReachableMarkings());
   }
 }

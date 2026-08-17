@@ -1,28 +1,30 @@
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Singleton class representing a Petri net model loaded from configuration.
+ * Represents a Petri net model: places, transitions, and the pre/post incidence matrices that
+ * govern token flow.
  *
  * <p>This class models the workflow of a system including resources, states and operations. It
  * supports both immediate and temporal transitions with token consumption, production and fire
  * mechanisms.
  *
- * <p>The Petri net structure is loaded from the properties file specified in {@code
- * config.properties} via {@link PetrinetLoader}.
+ * <p>Each {@code PetriNet} instance is self-contained: it owns its own marking and its own copy of
+ * the incidence matrices. This makes it safe to create one instance per analysis run — no shared
+ * global state between runs, and no risk of two concurrent runs interfering with each other's
+ * marking.
  *
- * @see PetrinetLoader
  * @author Sassi Juan Ignacio
  */
 public final class PetriNet {
-
-  /** Single static instance following the Singleton pattern. */
-  private static final PetriNet INSTANCE = new PetriNet();
 
   /**
    * Current marking vector representing the state of the Petri net. Each element represents the
    * number of tokens in the corresponding place.
    */
   private int[] marking;
+
+  /** Initial marking vector, kept to support {@link #reset()} without any external dependency. */
+  private final int[] initialMarking;
 
   /**
    * Vector indicating which transitions are temporal. A value of 1 indicates a temporal transition;
@@ -55,55 +57,98 @@ public final class PetriNet {
   private final int numTransitions;
 
   /**
-   * Private constructor implementing the Singleton pattern. Loads the Petri net from configuration,
-   * validates dimensions, and computes the incidence matrix.
+   * Constructs a {@code PetriNet} from explicit structural data.
    *
-   * @throws RuntimeException if matrix dimensions are inconsistent or vectors have wrong sizes
+   * <p>Defensive copies of {@code pre}, {@code post}, {@code initialMarking} and {@code
+   * temporalTransitions} are made, so the caller's arrays can be freely reused or mutated
+   * afterwards without affecting this instance.
+   *
+   * @param pre pre-incidence matrix, dimension [numPlaces][numTransitions]
+   * @param post post-incidence matrix, dimension [numPlaces][numTransitions]
+   * @param initialMarking initial marking vector, dimension [numPlaces]
+   * @param temporalTransitions per-transition temporal flag vector, dimension [numTransitions]
+   * @throws IllegalArgumentException if matrix dimensions are inconsistent or vectors have wrong
+   *     sizes
    */
-  private PetriNet() {
-    this.numPlaces = PetrinetLoader.getNumPlaces();
-    this.numTransitions = PetrinetLoader.getNumTransitions();
-    this.pre = PetrinetLoader.getPreMatrix();
-    this.post = PetrinetLoader.getPostMatrix();
-    this.marking = PetrinetLoader.getInitialMarkingVector();
-    this.temporalTransitions = PetrinetLoader.getTemporalTransitionsVector();
+  public PetriNet(int[][] pre, int[][] post, int[] initialMarking, int[] temporalTransitions) {
+    this.pre = deepCopy(pre);
+    this.post = deepCopy(post);
+    this.initialMarking = initialMarking.clone();
+    this.marking = initialMarking.clone();
+    this.temporalTransitions = temporalTransitions.clone();
+
+    this.numPlaces = this.pre.length;
+    this.numTransitions = this.pre.length > 0 ? this.pre[0].length : 0;
 
     validateDimensions();
 
-    this.incidence = Matrix.subtract(post, pre);
+    this.incidence = Matrix.subtract(this.post, this.pre);
   }
 
   /**
-   * Validates that all loaded matrices and vectors have consistent dimensions.
+   * Convenience factory that builds a {@code PetriNet} from the properties file configured in
+   * {@code config.properties} — equivalent to the console/catalog behaviour this project had before
+   * supporting user-submitted nets.
    *
-   * @throws RuntimeException if any dimension mismatch is found
+   * <p>Unlike the old singleton, calling this twice returns two independent instances, each with
+   * its own marking.
+   *
+   * @return a new {@code PetriNet} built from the currently configured properties
    */
+  public static PetriNet fromProperties() {
+    return new PetriNet(
+        PetrinetLoader.getPreMatrix(),
+        PetrinetLoader.getPostMatrix(),
+        PetrinetLoader.getInitialMarkingVector(),
+        PetrinetLoader.getTemporalTransitionsVector());
+  }
+
+  /**
+   * Returns a deep copy of a 2D integer matrix.
+   *
+   * @param matrix the matrix to copy
+   * @return a new matrix with the same values
+   */
+  private static int[][] deepCopy(int[][] matrix) {
+    int[][] copy = new int[matrix.length][];
+    for (int i = 0; i < matrix.length; i++) {
+      copy[i] = matrix[i].clone();
+    }
+    return copy;
+  }
+
   private void validateDimensions() {
+    validateRowsMatch();
+    validateColumnsMatch();
+    validateMarkingSize();
+    validateTemporalTransitionsSize();
+  }
+
+  private void validateRowsMatch() {
     if (pre.length != post.length) {
-      throw new RuntimeException("Pre and Post matrices must have the same number of rows");
+      throw new IllegalArgumentException("Pre and Post matrices must have the same number of rows");
     }
-    if (pre[0].length != post[0].length) {
-      throw new RuntimeException("Pre and Post matrices must have the same number of columns");
+  }
+
+  private void validateColumnsMatch() {
+    if (numTransitions > 0 && pre[0].length != post[0].length) {
+      throw new IllegalArgumentException(
+          "Pre and Post matrices must have the same number of columns");
     }
+  }
+
+  private void validateMarkingSize() {
     if (marking.length != numPlaces) {
-      throw new RuntimeException("Initial marking vector must have " + numPlaces + " elements");
+      throw new IllegalArgumentException(
+          "Initial marking vector must have " + numPlaces + " elements");
     }
+  }
+
+  private void validateTemporalTransitionsSize() {
     if (temporalTransitions.length != numTransitions) {
-      throw new RuntimeException(
+      throw new IllegalArgumentException(
           "Temporal transitions vector must have " + numTransitions + " elements");
     }
-  }
-
-  /**
-   * Returns the unique instance of {@code PetriNet}.
-   *
-   * @return the singleton instance
-   */
-  @SuppressFBWarnings(
-      value = "MS_EXPOSE_REP",
-      justification = "Acceso intencional al Singleton; los cambios de estado están controlados.")
-  public static PetriNet getInstance() {
-    return INSTANCE;
   }
 
   /**
@@ -207,12 +252,11 @@ public final class PetriNet {
   }
 
   /**
-   * Resets the Petri net to its initial marking as defined in the configuration.
-   *
-   * @see PetrinetLoader#getInitialMarkingVector()
+   * Resets this net to its own initial marking — the one it was constructed with, not whatever is
+   * currently in {@code config.properties}. Each instance is independent.
    */
   public void reset() {
-    this.marking = PetrinetLoader.getInitialMarkingVector();
+    this.marking = initialMarking.clone();
   }
 
   /**

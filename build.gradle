@@ -51,6 +51,10 @@ pmd {
     ignoreFailures = false
 }
 
+tasks.named('pmdTest') {
+    ruleSetFiles = files('config/pmd/ruleset-test.xml')
+}
+
 // ── Calidad estática ─────────────────────────────────────
 spotbugs {
     toolVersion    = '4.8.6'

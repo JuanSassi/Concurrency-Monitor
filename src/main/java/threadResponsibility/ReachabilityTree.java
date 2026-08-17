@@ -44,21 +44,27 @@ public class ReachabilityTree {
   private final int maxNumThreads;
 
   /**
-   * Constructs the reachability tree for the given action places. The complete reachability set is
-   * built immediately during construction.
+   * Constructs the reachability tree for the given action places over the given Petri net. The
+   * complete reachability set is built immediately during construction.
    *
    * <p>{@code actionPlaces} comes from {@link PlaceClassifier#getActionPlaces()}, which already
-   * returns an unmodifiable view — no defensive copy is needed.
+   * returns an unmodifiable view — no defensive copy is needed. {@code petriNet} is owned by the
+   * caller (typically {@code ThreadAllocator}) for the lifetime of one analysis run — it is
+   * intentionally shared, not defensively copied, so that a {@code Monitor} built afterwards can
+   * reuse the exact same net instance.
    *
    * @param actionPlaces set of place indices classified as action places
+   * @param petriNet the Petri net to explore; restored to its initial marking when this constructor
+   *     returns
    */
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
       justification =
-          "actionPlaces comes from PlaceClassifier.getActionPlaces(), which returns an"
-              + " unmodifiable view. No defensive copy needed.")
-  public ReachabilityTree(Set<Integer> actionPlaces) {
-    this.petriNet = PetriNet.getInstance();
+          "actionPlaces comes from PlaceClassifier.getActionPlaces() (unmodifiable view)."
+              + " petriNet is intentionally shared with the caller for the lifetime of one"
+              + " analysis run — not a defensive-copy candidate.")
+  public ReachabilityTree(Set<Integer> actionPlaces, PetriNet petriNet) {
+    this.petriNet = petriNet;
     this.sortedActionPlaces =
         Collections.unmodifiableList(new ArrayList<>(new TreeSet<>(actionPlaces)));
     this.reachableMarkings = new ArrayList<>();

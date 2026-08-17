@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
-<ruleset name="Concurrency-Monitor PMD Rules"
+<ruleset name="Concurrency-Monitor PMD Rules (tests)"
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
              https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
 
-    <description>Reglas PMD para Concurrency-Monitor</description>
+    <description>Reglas PMD para Concurrency-Monitor (código de test)</description>
 
     <!-- Buenas prácticas generales -->
     <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
@@ -23,15 +23,10 @@
     <rule ref="category/java/multithreading.xml/DoubleCheckedLocking"/>
     <rule ref="category/java/multithreading.xml/UnsynchronizedStaticFormatter"/>
 
-    <!-- Complejidad -->
+    <!-- Complejidad (sin TooManyMethods: no aplica a clases de test) -->
     <rule ref="category/java/design.xml/CyclomaticComplexity">
         <properties>
             <property name="methodReportLevel" value="10"/>
-        </properties>
-    </rule>
-    <rule ref="category/java/design.xml/TooManyMethods">
-        <properties>
-            <property name="maxmethods" value="15"/>
         </properties>
     </rule>
 

@@ -145,4 +145,8 @@ class PetrinetLoader extends PropertiesLoader {
   public static int getNumTransitions() {
     return getPreMatrix().length > 0 ? getPreMatrix()[0].length : 0;
   }
+
+  public static int[] getTransitionTimes() {
+    return getIntArray("temporary_transitions.vector");
+  }
 }

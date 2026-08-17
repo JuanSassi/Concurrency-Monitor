@@ -38,10 +38,17 @@ class AllocationLoggerTest {
   private void deleteLogDirectory() {
     File logDir = new File(LOG_DIR);
     if (logDir.exists()) {
-      for (File f : logDir.listFiles()) {
-        f.delete();
+      File[] files = logDir.listFiles();
+      if (files != null) {
+        for (File f : files) {
+          if (!f.delete()) {
+            System.err.println("No se pudo borrar: " + f.getAbsolutePath());
+          }
+        }
       }
-      logDir.delete();
+      if (!logDir.delete()) {
+        System.err.println("No se pudo borrar el directorio: " + logDir.getAbsolutePath());
+      }
     }
   }
 

@@ -43,6 +43,12 @@ class ReachabilityTreeTest {
   /** Shared tree instance built once per test. */
   private ReachabilityTree tree;
 
+  /**
+   * The PetriNet instance backing {@link #tree}, kept as a field so tests can inspect its state
+   * after construction (e.g. verifying it was reset to the initial marking after the BFS).
+   */
+  private PetriNet petriNet;
+
   /** Expected sorted action places for the Huang net. */
   private static final List<Integer> EXPECTED_ACTION_PLACES = List.of(1, 2, 3, 4, 8, 9, 10);
 
@@ -60,10 +66,14 @@ class ReachabilityTreeTest {
     int[][] pre = PetrinetLoader.getPreMatrix();
     int[][] post = PetrinetLoader.getPostMatrix();
     int[] m0 = PetrinetLoader.getInitialMarkingVector();
+    int[] temporal = PetrinetLoader.getTemporalTransitionsVector();
     int[][] w = Matrix.subtract(post, pre);
+
     Invariants inv = new Invariants(w);
     PlaceClassifier classifier = new PlaceClassifier(pre, post, m0, inv);
-    tree = new ReachabilityTree(classifier.getActionPlaces());
+
+    petriNet = new PetriNet(pre, post, m0, temporal);
+    tree = new ReachabilityTree(classifier.getActionPlaces(), petriNet);
   }
 
   // ── construcción ─────────────────────────────────────────
@@ -244,7 +254,7 @@ class ReachabilityTreeTest {
     int[] expected = PetrinetLoader.getInitialMarkingVector();
     assertArrayEquals(
         expected,
-        PetriNet.getInstance().getMarking(),
+        petriNet.getMarking(),
         "PetriNet no fue reseteado al marcado inicial tras el BFS");
   }
 }

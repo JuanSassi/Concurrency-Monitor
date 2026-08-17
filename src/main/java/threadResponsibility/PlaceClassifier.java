@@ -59,6 +59,9 @@ public class PlaceClassifier {
   /** Action places associated with each T-invariant */
   private final List<List<Integer>> paOfIt;
 
+  /** All places (input and output, mixed) connected to each T-invariant */
+  private final List<List<Integer>> piOfIt;
+
   /**
    * Constructs the classifier and performs automatic place classification.
    *
@@ -90,6 +93,7 @@ public class PlaceClassifier {
 
     classifyPlaces();
     this.paOfIt = computePaOfIt();
+    this.piOfIt = computePiOfIt();
   }
 
   /**
@@ -241,12 +245,83 @@ public class PlaceClassifier {
     return result;
   }
 
+  /**
+   * Computes all places (input and output, mixed) connected to each T-invariant.
+   *
+   * <p>Unlike {@link #computePaOfIt()}, this is not filtered to action places only — it includes
+   * every place touched by any active transition of the invariant, via either the pre or post
+   * incidence matrix. This is useful to show, for each T-invariant, the full set of places it
+   * reads from or writes to, regardless of their classification.
+   *
+   * @return list of sorted place index lists, one per T-invariant
+   */
+  private List<List<Integer>> computePiOfIt() {
+    List<List<Integer>> result = new ArrayList<>();
+
+    for (List<Integer> tInv : invariants.getTInvariants()) {
+      Set<Integer> involvedPlaces = new TreeSet<>();
+
+      for (int t = 0; t < numTransitions; t++) {
+        if (tInv.get(t) > 0) {
+          for (int p = 0; p < numPlaces; p++) {
+            if (pre[p][t] > 0 || post[p][t] > 0) {
+              involvedPlaces.add(p);
+            }
+          }
+        }
+      }
+
+      result.add(new ArrayList<>(involvedPlaces));
+    }
+
+    return result;
+  }
+
+  /**
+   * Formats a list of place indices as a labeled set, e.g. {@code {P2, P3, P5}}.
+   *
+   * @param places the place indices to format
+   * @return the set formatted as {@code {P..., P..., ...}}
+   */
+  private String formatPlaceSet(List<Integer> places) {
+    List<String> labels = new ArrayList<>();
+    for (Integer p : places) {
+      labels.add("P" + p);
+    }
+    return "{" + String.join(", ", labels) + "}";
+  }
+
   /** Prints the classification results to the console. */
-  public void printClassification() {
-    System.out.println("\n=================================");
-    System.out.println("Place Classification\n");
-    System.out.println("Resources, restrictions and idle places: " + resourcePlaces);
+  public void printActionPlaces() {
     System.out.println("Action places: " + actionPlaces + "\n");
+  }
+
+  /**
+   * Prints, for each T-invariant, its action places only — i.e. the places from {@link
+   * #printPiOfIt()} with resource, idle, and restriction places excluded. E.g. {@code PA1: {P3,
+   * P8, P14}}.
+   */
+  public void printPaOfIt() {
+    System.out.println("PA of IT (action places per T-invariant)\n");
+    for (int i = 0; i < paOfIt.size(); i++) {
+      System.out.println("PA" + (i + 1) + ": " + formatPlaceSet(paOfIt.get(i)));
+    }
+  }
+
+
+  public void printResourcePlaces(){
+    System.out.println("Resources, restrictions and idle places: " + resourcePlaces);
+  }
+
+  /**
+   * Prints, for each T-invariant, the full set of places (input and output, mixed) connected to
+   * it — e.g. {@code PI1: {P2, P3, P5, P6, P8, P14, P15}}.
+   */
+  public void printPiOfIt() {
+    System.out.println("PI of IT (places connected to each T-invariant)");
+    for (int i = 0; i < piOfIt.size(); i++) {
+      System.out.println("PI" + (i + 1) + ": " + formatPlaceSet(piOfIt.get(i)));
+    }
   }
 
   /**
@@ -265,5 +340,14 @@ public class PlaceClassifier {
    */
   public List<List<Integer>> getPaOfIt() {
     return Collections.unmodifiableList(paOfIt);
+  }
+
+  /**
+   * Gets all places (input and output, mixed) connected to each T-invariant.
+   *
+   * @return unmodifiable list of place index lists, one per T-invariant
+   */
+  public List<List<Integer>> getPiOfIt() {
+    return Collections.unmodifiableList(piOfIt);
   }
 }

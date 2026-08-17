@@ -4,9 +4,7 @@ public class Main {
   public static void main(String[] args) {
     ThreadAllocator allocator = new ThreadAllocator();
 
-    System.out.println("=== Algorithm 4.1 ===");
-    System.out.println("Max active threads: " + allocator.getMaxActiveThreads());
-    System.out.println("Reachable markings: " + allocator.getTree().getNumReachableMarkings());
+    allocator.Algorithm1();
 
     System.out.println("\n=== Algorithm 4.2 ===");
     System.out.println("Segments: " + allocator.getSegments());

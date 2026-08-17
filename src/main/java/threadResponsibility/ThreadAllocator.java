@@ -284,6 +284,7 @@ public class ThreadAllocator {
   */
   public void Algorithm1(){
     System.out.println("=== Algorithm 4.1 ===");
+    classifier.printResourcePlaces();
     Algorithm11();
     Algorithm12();
     Algorithm13();
@@ -292,19 +293,19 @@ public class ThreadAllocator {
   }
 
   public void Algorithm11(){
-    invariants.printPInvariants();
+    invariants.printTInvariants();
   }
 
   public void Algorithm12(){
-    
+    classifier.printPiOfIt();
   }
 
   public void Algorithm13(){
-    
+    classifier.printPaOfIt();
   }
 
   public void Algorithm14(){
-    
+    classifier.printActionPlaces();
   }
 
   public void Algorithm15(){

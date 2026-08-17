@@ -193,23 +193,24 @@ public class Invariants {
     return true;
   }
 
-  /** Prints all minimal P-invariants to the console. */
+  /** Prints all minimal P-invariants to the console, showing each as a labeled set of places. */
   public void printPInvariants() {
-    System.out.println("\n=================================");
-    System.out.println("P-invariants (minimal invariants found): " + pInvariant.size() + "\n");
+    //System.out.println("P-invariants (minimal invariants found): " + pInvariant.size() + "\n");
     for (int i = 0; i < pInvariant.size(); i++) {
-      System.out.println("x" + (i + 1) + " = " + pInvariant.get(i));
+      System.out.println("IP" + (i + 1) + " = " + formatSupport(pInvariant.get(i), "P"));
+    }
+  }
+ 
+  /**
+   * Prints all minimal T-invariants to the console, showing each as a labeled set of transitions.
+   */
+  public void printTInvariants() {
+    //System.out.println("T-invariants (minimal invariants found): " + tInvariant.size() + "\n");
+    for (int i = 0; i < tInvariant.size(); i++) {
+      System.out.println("IT" + (i + 1) + " = " + formatSupport(tInvariant.get(i), "T"));
     }
   }
 
-  /** Prints all minimal T-invariants to the console. */
-  public void printTInvariants() {
-    System.out.println("\n=================================");
-    System.out.println("T-invariants (minimal invariants found): " + tInvariant.size() + "\n");
-    for (int i = 0; i < tInvariant.size(); i++) {
-      System.out.println("y" + (i + 1) + " = " + tInvariant.get(i));
-    }
-  }
 
   /**
    * Gets the list of computed P-invariants.
@@ -228,4 +229,24 @@ public class Invariants {
   public List<List<Integer>> getTInvariants() {
     return Collections.unmodifiableList(tInvariant);
   }
+ 
+  /**
+   * Formats an invariant's support (the indices with a positive coefficient) as a labeled set,
+   * e.g. {@code {T0, T2, T4, T5}} for a T-invariant or {@code {P1, P3}} for a P-invariant.
+   *
+   * @param invariant the invariant vector
+   * @param prefix label to prepend to each index ({@code "T"} for transitions, {@code "P"} for
+   *     places)
+   * @return the support formatted as {@code {prefix0, prefix1, ...}}
+   */
+  private String formatSupport(List<Integer> invariant, String prefix) {
+    List<String> labels = new ArrayList<>();
+    for (int i = 0; i < invariant.size(); i++) {
+      if (invariant.get(i) > 0) {
+        labels.add(prefix + i);
+      }
+    }
+    return "{" + String.join(", ", labels) + "}";
+  }
+
 }

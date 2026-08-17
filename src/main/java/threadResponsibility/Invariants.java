@@ -195,7 +195,7 @@ public class Invariants {
 
   /** Prints all minimal P-invariants to the console, showing each as a labeled set of places. */
   public void printPInvariants() {
-    //System.out.println("P-invariants (minimal invariants found): " + pInvariant.size() + "\n");
+    System.out.println("\nP-invariants");
     for (int i = 0; i < pInvariant.size(); i++) {
       System.out.println("IP" + (i + 1) + " = " + formatSupport(pInvariant.get(i), "P"));
     }
@@ -205,7 +205,7 @@ public class Invariants {
    * Prints all minimal T-invariants to the console, showing each as a labeled set of transitions.
    */
   public void printTInvariants() {
-    //System.out.println("T-invariants (minimal invariants found): " + tInvariant.size() + "\n");
+    System.out.println("\nT-invariants");
     for (int i = 0; i < tInvariant.size(); i++) {
       System.out.println("IT" + (i + 1) + " = " + formatSupport(tInvariant.get(i), "T"));
     }

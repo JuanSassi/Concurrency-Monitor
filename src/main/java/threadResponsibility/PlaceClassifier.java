@@ -293,7 +293,13 @@ public class PlaceClassifier {
 
   /** Prints the classification results to the console. */
   public void printActionPlaces() {
-    System.out.println("Action places: " + actionPlaces + "\n");
+    List<Integer> sorted = new ArrayList<>(actionPlaces);
+    Collections.sort(sorted);
+    List<String> labeled = new ArrayList<>();
+    for (Integer p : sorted) {
+      labeled.add("P" + p);
+    }
+    System.out.println("\nAction places: " + labeled + "\n");
   }
 
   /**
@@ -302,15 +308,22 @@ public class PlaceClassifier {
    * P8, P14}}.
    */
   public void printPaOfIt() {
-    System.out.println("PA of IT (action places per T-invariant)\n");
+    System.out.println("\nPA of IT (action places per T-invariant)");
     for (int i = 0; i < paOfIt.size(); i++) {
       System.out.println("PA" + (i + 1) + ": " + formatPlaceSet(paOfIt.get(i)));
     }
   }
 
 
-  public void printResourcePlaces(){
-    System.out.println("Resources, restrictions and idle places: " + resourcePlaces);
+    /** Prints the classification results to the console. */
+  public void printResourcePlaces() {
+    List<Integer> sorted = new ArrayList<>(resourcePlaces);
+    Collections.sort(sorted);
+    List<String> labeled = new ArrayList<>();
+    for (Integer p : sorted) {
+      labeled.add("P" + p);
+    }
+    System.out.println("\n" + "Resources, restrictions and idle places: " + labeled);
   }
 
   /**
@@ -318,7 +331,7 @@ public class PlaceClassifier {
    * it — e.g. {@code PI1: {P2, P3, P5, P6, P8, P14, P15}}.
    */
   public void printPiOfIt() {
-    System.out.println("PI of IT (places connected to each T-invariant)");
+    System.out.println("\nPI of IT (places connected to each T-invariant)");
     for (int i = 0; i < piOfIt.size(); i++) {
       System.out.println("PI" + (i + 1) + ": " + formatPlaceSet(piOfIt.get(i)));
     }

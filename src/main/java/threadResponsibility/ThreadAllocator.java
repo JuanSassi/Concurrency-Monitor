@@ -283,7 +283,7 @@ public class ThreadAllocator {
   * 
   */
   public void Algorithm1(){
-    System.out.println("=== Algorithm 4.1 ===");
+    System.out.println("\n"+"=== Algorithm 4.1 ===");
     classifier.printResourcePlaces();
     Algorithm11();
     Algorithm12();
@@ -306,10 +306,11 @@ public class ThreadAllocator {
 
   public void Algorithm14(){
     classifier.printActionPlaces();
+    System.out.print("The reachability tree is located in a .log file in the ./log/ directory\n");
   }
 
   public void Algorithm15(){
-    System.out.println("Max active threads: " + getMaxActiveThreads());
+    System.out.println("\nMax active threads: " + getMaxActiveThreads());
     System.out.println("Reachable markings: " + getTree().getNumReachableMarkings());
   }
 }

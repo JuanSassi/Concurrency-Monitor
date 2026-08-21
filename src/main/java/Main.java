@@ -5,32 +5,8 @@ public class Main {
     ThreadAllocator allocator = new ThreadAllocator();
 
     allocator.Algorithm1();
-
-    System.out.println("\n=== Algorithm 4.2 ===");
-    System.out.println("Segments: " + allocator.getSegments());
-    System.out.println("Forks:    " + allocator.getResponsibilities().getForkPlaces());
-    System.out.println("Joins:    " + allocator.getResponsibilities().getJoinPlaces());
-
-    System.out.println("\n=== Algorithm 4.3 ===");
-    List<List<Integer>> segmentPlaces = allocator.computeAllSegmentPlaces();
-    List<Integer> threadsPerSegment = allocator.getThreadsPerSegment();
-    for (int i = 0; i < allocator.getSegments().size(); i++) {
-      System.out.println(
-          "S"
-              + (i + 1)
-              + " transitions="
-              + allocator.getSegments().get(i)
-              + " places="
-              + segmentPlaces.get(i)
-              + " maxThreads="
-              + threadsPerSegment.get(i));
-    }
-
-    System.out.println("\n=== PI of IT ===");
-    List<List<Integer>> piOfIt = allocator.computePiOfIt();
-    for (int i = 0; i < piOfIt.size(); i++) {
-      System.out.println("IT" + (i + 1) + " → " + piOfIt.get(i));
-    }
+    allocator.Algorithm2();
+    allocator.Algorithm3();
 
     new AllocationLogger(allocator).logAll();
   }

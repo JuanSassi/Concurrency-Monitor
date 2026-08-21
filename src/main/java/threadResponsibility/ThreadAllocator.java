@@ -134,8 +134,8 @@ public class ThreadAllocator {
     return result;
   }
 
-  /**
-   * Computes the action places (excluding forks and joins) for each segment.
+   /**
+   * Computes all places (including forks and joins) for each segment.
    *
    * @return list of sorted place index lists, one per segment
    */
@@ -148,23 +148,23 @@ public class ThreadAllocator {
   }
 
   /**
-   * Computes the action places for a single segment, excluding fork and join places.
+   * Computes all places for a single segment, including fork and join places.
    *
    * @param segment list of transition indices forming the segment
-   * @return sorted list of action place indices in the segment
+   * @return sorted list of action place indices in the segment (forks and joins included)
    */
   private List<Integer> computeSegmentPlaces(List<Integer> segment) {
     Set<Integer> places = new HashSet<>();
     Set<Integer> actionPlaces = classifier.getActionPlaces();
-    List<Integer> forks = responsibilities.getForkPlaces();
     List<Integer> joins = responsibilities.getJoinPlaces();
 
     for (Integer t : segment) {
       for (int p = 0; p < post.length; p++) {
-        if (post[p][t] > 0
-            && actionPlaces.contains(p)
-            && !forks.contains(p)
-            && !joins.contains(p)) {
+        if (!actionPlaces.contains(p)) {
+          continue;
+        }
+        boolean connected = joins.contains(p) ? pre[p][t] > 0 : post[p][t] > 0;
+        if (connected) {
           places.add(p);
         }
       }
@@ -173,6 +173,28 @@ public class ThreadAllocator {
     List<Integer> sorted = new ArrayList<>(places);
     Collections.sort(sorted);
     return sorted;
+  }
+
+  private void printSegmentPlaces() {
+    List<List<Integer>> segPlaces = computeAllSegmentPlaces();
+    for (int i = 0; i < segPlaces.size(); i++) {
+      System.out.println("PS" + (i + 1) + " = " + formatIndices(segPlaces.get(i), "P"));
+    }
+  }
+
+  private void printSegments() {
+    List<List<Integer>> segs = getSegments();
+    for (int i = 0; i < segs.size(); i++) {
+      System.out.println("S" + (i + 1) + " = " + formatIndices(segs.get(i), "T"));
+    }
+  }
+
+  private String formatIndices(List<Integer> indices, String prefix) {
+    List<String> labels = new ArrayList<>();
+    for (Integer idx : indices) {
+      labels.add(prefix + idx);
+    }
+    return "{" + String.join(", ", labels) + "}";
   }
 
   /**
@@ -312,5 +334,29 @@ public class ThreadAllocator {
   public void Algorithm15(){
     System.out.println("\nMax active threads: " + getMaxActiveThreads());
     System.out.println("Reachable markings: " + getTree().getNumReachableMarkings());
+  }
+
+  public void Algorithm2() {
+    System.out.println("\n=== Algorithm 4.2 ===");
+    printSegments();
+    System.out.println("Forks:    " + formatIndices(getResponsibilities().getForkPlaces(), "P"));
+    System.out.println("Joins:    " + formatIndices(getResponsibilities().getJoinPlaces(), "P"));
+    printSegmentPlaces();
+  }
+
+  public void Algorithm3() {
+    int max = 0;
+    System.out.println("\n=== Algorithm 4.3 ===");
+    List<List<Integer>> segmentPlaces = computeAllSegmentPlaces();
+    List<Integer> threadsPerSegment = getThreadsPerSegment();
+    for (int i = 0; i < getSegments().size(); i++) {
+      System.out.println(
+          "Max(MS"
+              + (i + 1)
+              + ") = "
+              + threadsPerSegment.get(i));
+      max += threadsPerSegment.get(i);
+    }
+    System.out.println("\nMaximum number of threads in the system = " + max);
   }
 }

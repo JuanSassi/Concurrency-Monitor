@@ -18,8 +18,9 @@ import java.util.Set;
  *   <li>Identifies fork/join places and execution segments ({@link Responsibilities})
  * </ol>
  *
- * <p>This class is a pure analysis component — it does not produce any log files or side effects.
- * Logging is the responsibility of the caller.
+ * <p>This class is a pure analysis component — it produces no console output and no log files.
+ * Rendering the results is the responsibility of the caller (see {@code AlgorithmsConsolePrinter}
+ * and {@code AllocationLogger}).
  *
  * <p>The {@code PetriNet} instance created here is exposed via {@link #getPetriNet()} so that
  * whoever runs the simulation afterwards (e.g. a {@code Monitor}) can reuse the exact same instance
@@ -106,35 +107,20 @@ public class ThreadAllocator {
    * or post incidence matrix. This differs from {@link PlaceClassifier#getPaOfIt()}, which returns
    * only action places.
    *
+   * <p>The computation itself lives in {@link TInvariantPlaces}; this method is a convenience
+   * delegation that returns a fresh, mutable copy.
+   *
    * @return list of sorted place index lists, one per T-invariant
    */
   public List<List<Integer>> computePiOfIt() {
     List<List<Integer>> result = new ArrayList<>();
-    int numPlaces = pre.length;
-    int numTransitions = pre[0].length;
-
-    for (List<Integer> tInv : invariants.getTInvariants()) {
-      Set<Integer> involved = new HashSet<>();
-
-      for (int t = 0; t < numTransitions; t++) {
-        if (tInv.get(t) > 0) {
-          for (int p = 0; p < numPlaces; p++) {
-            if (pre[p][t] > 0 || post[p][t] > 0) {
-              involved.add(p);
-            }
-          }
-        }
-      }
-
-      List<Integer> sorted = new ArrayList<>(involved);
-      Collections.sort(sorted);
-      result.add(sorted);
+    for (List<Integer> places : classifier.getPiOfIt()) {
+      result.add(new ArrayList<>(places));
     }
-
     return result;
   }
 
-   /**
+  /**
    * Computes all places (including forks and joins) for each segment.
    *
    * @return list of sorted place index lists, one per segment
@@ -175,28 +161,6 @@ public class ThreadAllocator {
     return sorted;
   }
 
-  private void printSegmentPlaces() {
-    List<List<Integer>> segPlaces = computeAllSegmentPlaces();
-    for (int i = 0; i < segPlaces.size(); i++) {
-      System.out.println("PS" + (i + 1) + " = " + formatIndices(segPlaces.get(i), "P"));
-    }
-  }
-
-  private void printSegments() {
-    List<List<Integer>> segs = getSegments();
-    for (int i = 0; i < segs.size(); i++) {
-      System.out.println("S" + (i + 1) + " = " + formatIndices(segs.get(i), "T"));
-    }
-  }
-
-  private String formatIndices(List<Integer> indices, String prefix) {
-    List<String> labels = new ArrayList<>();
-    for (Integer idx : indices) {
-      labels.add(prefix + idx);
-    }
-    return "{" + String.join(", ", labels) + "}";
-  }
-
   /**
    * Computes the maximum number of threads for each segment (Algorithm 4.3).
    *
@@ -208,6 +172,20 @@ public class ThreadAllocator {
       result.add(tree.calculateMaxThreadsInSegment(segmentPlaces));
     }
     return result;
+  }
+
+  /**
+   * Returns the total maximum number of threads in the system (Algorithm 4.3 result), i.e. the sum
+   * of the per-segment maxima.
+   *
+   * @return total thread count for the whole system
+   */
+  public int getTotalThreads() {
+    int total = 0;
+    for (Integer threads : getThreadsPerSegment()) {
+      total += threads;
+    }
+    return total;
   }
 
   /**
@@ -285,78 +263,5 @@ public class ThreadAllocator {
               + " unmodifiable views.")
   public Invariants getInvariants() {
     return invariants;
-  }
-
-  /** 
-  * === Algorithm 1 ===
-  * 
-  * 1 Obtener los IT de la RdP
-  * 
-  * 2 Para cada IT obtener el conjunto de plazas asociadas al IT en análisis
-  * 
-  * 3 Determinar las plazas relacionadas a acciones de cada IT
-  * 
-  * 4 Del árbol de alcanzabilidad de la RdP, se debe obtener MA
-  * MA es el conjunto de todos los marcados posibles de todos los conjuntos de plazas.
-  * 
-  *  5 De cada marcado posible (estado) del conjunto MA se debe realizar la suma de las marcas. 
-  * De todas estas sumas, se debe buscar la de mayor valor (marcado máximo). 
-  * Esta será la cantidad máxima de hilos activos simultáneos en el sistema.
-  * 
-  */
-  public void Algorithm1(){
-    System.out.println("\n"+"=== Algorithm 4.1 ===");
-    classifier.printResourcePlaces();
-    Algorithm11();
-    Algorithm12();
-    Algorithm13();
-    Algorithm14();
-    Algorithm15();
-  }
-
-  public void Algorithm11(){
-    invariants.printTInvariants();
-  }
-
-  public void Algorithm12(){
-    classifier.printPiOfIt();
-  }
-
-  public void Algorithm13(){
-    classifier.printPaOfIt();
-  }
-
-  public void Algorithm14(){
-    classifier.printActionPlaces();
-    System.out.print("The reachability tree is located in a .log file in the ./log/ directory\n");
-  }
-
-  public void Algorithm15(){
-    System.out.println("\nMax active threads: " + getMaxActiveThreads());
-    System.out.println("Reachable markings: " + getTree().getNumReachableMarkings());
-  }
-
-  public void Algorithm2() {
-    System.out.println("\n=== Algorithm 4.2 ===");
-    printSegments();
-    System.out.println("Forks:    " + formatIndices(getResponsibilities().getForkPlaces(), "P"));
-    System.out.println("Joins:    " + formatIndices(getResponsibilities().getJoinPlaces(), "P"));
-    printSegmentPlaces();
-  }
-
-  public void Algorithm3() {
-    int max = 0;
-    System.out.println("\n=== Algorithm 4.3 ===");
-    List<List<Integer>> segmentPlaces = computeAllSegmentPlaces();
-    List<Integer> threadsPerSegment = getThreadsPerSegment();
-    for (int i = 0; i < getSegments().size(); i++) {
-      System.out.println(
-          "Max(MS"
-              + (i + 1)
-              + ") = "
-              + threadsPerSegment.get(i));
-      max += threadsPerSegment.get(i);
-    }
-    System.out.println("\nMaximum number of threads in the system = " + max);
   }
 }

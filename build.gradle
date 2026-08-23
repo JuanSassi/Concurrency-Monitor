@@ -24,7 +24,18 @@ repositories {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
     implementation     'org.ejml:ejml-simple:0.43.1'
-    compileOnly        'com.github.spotbugs:spotbugs-annotations:4.8.6'  // ← agregar
+    compileOnly        'com.github.spotbugs:spotbugs-annotations:4.8.6'
+
+    implementation platform('org.springframework.boot:spring-boot-dependencies:3.3.4')
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+}
+
+// ── Web (Spring Boot) ─────────────────────────────────────
+tasks.register('runWeb', JavaExec) {
+    group = 'application'
+    description = 'Corre el servidor web (API + frontend), separado de Main (consola).'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'WebApplication'
 }
 
 // ── Formato (≈ black + isort) ────────────────────────────

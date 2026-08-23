@@ -363,4 +363,14 @@ public class PlaceClassifier {
   public List<List<Integer>> getPiOfIt() {
     return Collections.unmodifiableList(piOfIt);
   }
+
+    /**
+   * Gets the set of resource, restriction, and idle places identified by the classification
+   * algorithm.
+   *
+   * @return unmodifiable set of resource place indices
+   */
+  public Set<Integer> getResourcePlaces() {
+    return Collections.unmodifiableSet(resourcePlaces);
+  }
 }

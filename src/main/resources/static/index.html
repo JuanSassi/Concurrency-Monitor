@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Concurrency Monitor — Análisis</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { font-family: monospace; background: #111; color: #eee; padding: 2rem; max-width: 700px; margin: 0 auto; }
+    h1 { color: #7fd1ff; }
+    h2 { color: #7fd1ff; border-bottom: 1px solid #444; padding-bottom: .3rem; margin-top: 2rem; }
+    ul { list-style: none; padding-left: 0; }
+    li { padding: .15rem 0; }
+    .stat { color: #ffd27f; font-weight: bold; }
+    .error { color: #ff7f7f; }
+    button { background: #2b6b4a; border: none; padding: .5rem 1.2rem; color: white; cursor: pointer; border-radius: 4px; font-family: inherit; }
+    button:disabled { opacity: .5; cursor: default; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    function Section({ title, lines }) {
+      return (
+        <div>
+          <h2>{title}</h2>
+          <ul>
+            {lines.map((line, i) => <li key={i}>{line}</li>)}
+          </ul>
+        </div>
+      );
+    }
+
+    function App() {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState(null);
+
+      function runAnalysis() {
+        setLoading(true);
+        setError(null);
+        fetch('/api/analysis')
+          .then((res) => {
+            if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+            return res.json();
+          })
+          .then(setData)
+          .catch((err) => setError(err.message))
+          .finally(() => setLoading(false));
+      }
+
+      useEffect(() => { runAnalysis(); }, []);
+
+      return (
+        <div>
+          <h1>Concurrency Monitor</h1>
+          <button onClick={runAnalysis} disabled={loading}>
+            {loading ? 'Analizando...' : 'Run'}
+          </button>
+
+          {error && <p className="error">{error}</p>}
+
+          {data && (
+            <div>
+              <h2>Algorithm 4.1</h2>
+              <p>Resources, restrictions and idle places: {data.resourcePlaces}</p>
+              <Section title="T-invariants" lines={data.tInvariants} />
+              <Section title="PI of IT" lines={data.piOfIt} />
+              <Section title="PA of IT" lines={data.paOfIt} />
+              <p>Action places: {data.actionPlaces}</p>
+              <p className="stat">Max active threads: {data.maxActiveThreads}</p>
+              <p className="stat">Reachable markings: {data.reachableMarkings}</p>
+
+              <h2>Algorithm 4.2</h2>
+              <Section title="Segments" lines={data.segments} />
+              <p>Forks: {data.forks}</p>
+              <p>Joins: {data.joins}</p>
+              <Section title="Segment places" lines={data.segmentPlaces} />
+
+              <h2>Algorithm 4.3</h2>
+              <Section title="Threads per segment" lines={data.threadsPerSegment} />
+              <p className="stat">
+                Maximum number of threads in the system = {data.totalMaxThreads}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

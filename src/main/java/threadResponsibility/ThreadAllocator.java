@@ -134,19 +134,31 @@ public class ThreadAllocator {
   }
 
   /**
-   * Computes all places for a single segment, including fork and join places.
+   * Computes the places belonging to a single segment.
+   *
+   * <p>Each synchronization place is assigned to the side that is unambiguous: a fork has one
+   * producing segment and several consuming ones, so it goes to its producer; a join has several
+   * producers and one consumer, so it goes to its consumer.
+   *
+   * <p>A place that is <b>both</b> fork and join has no unambiguous side — several producers and
+   * several consumers — so neither rule applies and assigning it to either side would count its
+   * tokens once per segment on that side. It is excluded instead: such a place is a pure
+   * synchronization buffer, and a token sitting in it is queued work, not a running thread. The
+   * producing thread already deposited it and moved on; no consuming thread has claimed it yet.
    *
    * @param segment list of transition indices forming the segment
-   * @return sorted list of action place indices in the segment (forks and joins included)
+   * @return sorted list of action place indices in the segment; simple forks and joins are
+   *     included, places that are both are excluded
    */
   private List<Integer> computeSegmentPlaces(List<Integer> segment) {
     Set<Integer> places = new HashSet<>();
     Set<Integer> actionPlaces = classifier.getActionPlaces();
     List<Integer> joins = responsibilities.getJoinPlaces();
+    List<Integer> forks = responsibilities.getForkPlaces();
 
     for (Integer t : segment) {
       for (int p = 0; p < post.length; p++) {
-        if (!actionPlaces.contains(p)) {
+        if (!actionPlaces.contains(p) || (forks.contains(p) && joins.contains(p))) {
           continue;
         }
         boolean connected = joins.contains(p) ? pre[p][t] > 0 : post[p][t] > 0;
@@ -160,7 +172,7 @@ public class ThreadAllocator {
     Collections.sort(sorted);
     return sorted;
   }
-
+  
   /**
    * Computes the maximum number of threads for each segment (Algorithm 4.3).
    *

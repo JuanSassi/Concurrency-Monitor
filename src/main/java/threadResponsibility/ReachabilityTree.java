@@ -17,7 +17,7 @@ import java.util.TreeSet;
  * marking. Only the token counts of action places are stored per marking, reducing memory usage and
  * focusing on the states relevant to thread allocation.
  *
- * <p>This class supports Algorithms 4.1 and 4.3 from Ventre & Micolini (2021):
+ * <p>This class supports Algorithms 4.1 and 4.3 from Ventre &amp; Micolini (2021):
  *
  * <ul>
  *   <li>Algorithm 4.1 — maximum number of simultaneously active threads
@@ -27,6 +27,16 @@ import java.util.TreeSet;
  * @author Sassi Juan Ignacio
  */
 public class ReachabilityTree {
+
+  /**
+   * Ceiling on the number of distinct markings explored before giving up.
+   *
+   * <p>An unbounded net has an infinite reachability set — a single transition that produces tokens
+   * without consuming any is enough. The BFS below would never terminate and would exhaust the heap
+   * on the way. Since boundedness is not checked anywhere upstream, and nets can now arrive from a
+   * client, the search needs a hard stop.
+   */
+  private static final int MAX_REACHABLE_MARKINGS = 50_000;
 
   /** Petri net instance used for state-space exploration. */
   private final PetriNet petriNet;
@@ -56,6 +66,7 @@ public class ReachabilityTree {
    * @param actionPlaces set of place indices classified as action places
    * @param petriNet the Petri net to explore; restored to its initial marking when this constructor
    *     returns
+   * @throws PetriNetValidationException if the net appears to be unbounded
    */
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
@@ -82,6 +93,9 @@ public class ReachabilityTree {
    *
    * <p>After each transition firing the Petri net is restored to the current BFS marking so that
    * all enabled transitions can be tried independently.
+   *
+   * @throws PetriNetValidationException if the reachability set exceeds {@link
+   *     #MAX_REACHABLE_MARKINGS}
    */
   private void buildReachabilitySet() {
     Map<String, Boolean> visited = new HashMap<>();
@@ -109,6 +123,7 @@ public class ReachabilityTree {
         if (!visited.containsKey(key)) {
           visited.put(key, Boolean.TRUE);
           reachableMarkings.add(extractActionMarking(next));
+          checkBounded();
           queue.add(next);
         }
 
@@ -117,6 +132,21 @@ public class ReachabilityTree {
     }
 
     petriNet.reset();
+  }
+
+  /**
+   * Aborts the search once the reachability set grows past the allowed ceiling.
+   *
+   * @throws PetriNetValidationException if the limit has been exceeded
+   */
+  private void checkBounded() {
+    if (reachableMarkings.size() > MAX_REACHABLE_MARKINGS) {
+      throw new PetriNetValidationException(
+          "La red parece no acotada: se superaron los "
+              + MAX_REACHABLE_MARKINGS
+              + " marcados alcanzables. Revisá que cada transición consuma tokens y que las"
+              + " plazas de recurso limiten la cantidad de hilos.");
+    }
   }
 
   /**

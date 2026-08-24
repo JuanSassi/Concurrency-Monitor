@@ -2,20 +2,34 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Concurrency Monitor — Análisis</title>
   <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <style>
-    body { font-family: monospace; background: #111; color: #eee; padding: 2rem; max-width: 700px; margin: 0 auto; }
+    body { font-family: monospace; background: #111; color: #eee; padding: 2rem; max-width: 1000px; margin: 0 auto; }
     h1 { color: #7fd1ff; }
     h2 { color: #7fd1ff; border-bottom: 1px solid #444; padding-bottom: .3rem; margin-top: 2rem; }
+    h3 { color: #9fe1cb; margin: 1rem 0 .4rem; font-size: .95rem; }
     ul { list-style: none; padding-left: 0; }
     li { padding: .15rem 0; }
     .stat { color: #ffd27f; font-weight: bold; }
-    .error { color: #ff7f7f; }
+    .error { color: #ff7f7f; border-left: 3px solid #ff7f7f; padding: .5rem .8rem; background: #2a1414; }
+    .hint { color: #999; font-size: .8rem; }
     button { background: #2b6b4a; border: none; padding: .5rem 1.2rem; color: white; cursor: pointer; border-radius: 4px; font-family: inherit; }
     button:disabled { opacity: .5; cursor: default; }
+    button.secondary { background: #34506b; }
+    select, input, textarea { background: #1c1c1c; color: #eee; border: 1px solid #444; border-radius: 3px; font-family: inherit; padding: .3rem; }
+    input[type=number].dim { width: 4rem; }
+    .panel { border: 1px solid #333; border-radius: 6px; padding: 1rem; margin: 1rem 0; background: #161616; }
+    .row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-bottom: .8rem; }
+    .scroll { overflow-x: auto; padding-bottom: .4rem; }
+    table { border-collapse: collapse; }
+    th { color: #888; font-weight: normal; font-size: .75rem; padding: 2px 4px; }
+    td { padding: 1px; }
+    td input { width: 2.4rem; text-align: center; padding: .2rem; }
+    textarea { width: 100%; min-height: 7rem; }
   </style>
 </head>
 <body>
@@ -23,71 +37,338 @@
 
   <script type="text/babel">
     const { useState, useEffect } = React;
+    const MAX_DIM = 16;
+
+    function emptyMatrix(rows, cols) {
+      return Array.from({ length: rows }, () => Array.from({ length: cols }, () => '0'));
+    }
+
+    function emptyVector(n) {
+      return Array.from({ length: n }, () => '0');
+    }
+
+    function resizeMatrix(matrix, rows, cols) {
+      return Array.from({ length: rows }, (_, i) =>
+        Array.from({ length: cols }, (_, j) => (matrix[i] && matrix[i][j] !== undefined ? matrix[i][j] : '0'))
+      );
+    }
+
+    function resizeVector(vector, n) {
+      return Array.from({ length: n }, (_, i) => (vector[i] !== undefined ? vector[i] : '0'));
+    }
+
+    function toInts(vector) {
+      return vector.map((v) => {
+        const n = parseInt(v, 10);
+        if (Number.isNaN(n)) throw new Error('Hay celdas con valores no numéricos.');
+        return n;
+      });
+    }
+
+    async function readResponse(res) {
+      const body = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error((body && body.error) || 'Error del servidor: ' + res.status);
+      }
+      return body;
+    }
+
+    function parsePropertiesText(text) {
+      const map = {};
+      text.split('\n').forEach((line) => {
+        const t = line.trim();
+        if (!t || t.startsWith('#') || !t.includes('=')) return;
+        const i = t.indexOf('=');
+        map[t.slice(0, i).trim()] = t.slice(i + 1).trim();
+      });
+
+      const vector = (key) => (map[key] ? map[key].split(',').map((s) => s.trim()) : null);
+      const matrix = (prefix) => {
+        const rows = [];
+        let i = 0;
+        while (map[prefix + '.' + i] !== undefined) {
+          rows.push(map[prefix + '.' + i].split(',').map((s) => s.trim()));
+          i++;
+        }
+        return rows;
+      };
+
+      const pre = matrix('matrix.pre');
+      const post = matrix('matrix.post');
+      const m0 = vector('initial_marking.vector');
+      const temporal = vector('temporary_transitions.vector');
+
+      if (!pre.length || !post.length || !m0 || !temporal) {
+        throw new Error('Faltan claves: se esperan matrix.pre.N, matrix.post.N, initial_marking.vector y temporary_transitions.vector.');
+      }
+      if (pre.length > MAX_DIM || pre[0].length > MAX_DIM) {
+        throw new Error('La red pegada supera el máximo de ' + MAX_DIM + '×' + MAX_DIM + '.');
+      }
+      return { pre, post, m0, temporal, places: pre.length, transitions: pre[0].length };
+    }
 
     function Section({ title, lines }) {
       return (
         <div>
           <h2>{title}</h2>
-          <ul>
-            {lines.map((line, i) => <li key={i}>{line}</li>)}
-          </ul>
+          <ul>{lines.map((line, i) => <li key={i}>{line}</li>)}</ul>
+        </div>
+      );
+    }
+
+    function MatrixEditor({ label, matrix, onChange }) {
+      const cols = matrix[0] ? matrix[0].length : 0;
+      return (
+        <div>
+          <h3>{label}</h3>
+          <div className="scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th></th>
+                  {Array.from({ length: cols }, (_, j) => <th key={j}>T{j}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {matrix.map((row, i) => (
+                  <tr key={i}>
+                    <th>P{i}</th>
+                    {row.map((cell, j) => (
+                      <td key={j}>
+                        <input
+                          value={cell}
+                          onChange={(e) => {
+                            const copy = matrix.map((r) => r.slice());
+                            copy[i][j] = e.target.value;
+                            onChange(copy);
+                          }}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    function VectorEditor({ label, vector, prefix, onChange }) {
+      return (
+        <div>
+          <h3>{label}</h3>
+          <div className="scroll">
+            <table>
+              <thead>
+                <tr>{vector.map((_, i) => <th key={i}>{prefix}{i}</th>)}</tr>
+              </thead>
+              <tbody>
+                <tr>
+                  {vector.map((cell, i) => (
+                    <td key={i}>
+                      <input
+                        value={cell}
+                        onChange={(e) => {
+                          const copy = vector.slice();
+                          copy[i] = e.target.value;
+                          onChange(copy);
+                        }}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+
+    function CustomNetForm({ onAnalyze, loading }) {
+      const [places, setPlaces] = useState(4);
+      const [transitions, setTransitions] = useState(4);
+      const [pre, setPre] = useState(() => emptyMatrix(4, 4));
+      const [post, setPost] = useState(() => emptyMatrix(4, 4));
+      const [m0, setM0] = useState(() => emptyVector(4));
+      const [temporal, setTemporal] = useState(() => emptyVector(4));
+      const [paste, setPaste] = useState('');
+      const [localError, setLocalError] = useState(null);
+
+      function applyDimensions(newPlaces, newTransitions) {
+        const p = Math.max(1, Math.min(MAX_DIM, newPlaces || 1));
+        const t = Math.max(1, Math.min(MAX_DIM, newTransitions || 1));
+        setPlaces(p);
+        setTransitions(t);
+        setPre((m) => resizeMatrix(m, p, t));
+        setPost((m) => resizeMatrix(m, p, t));
+        setM0((v) => resizeVector(v, p));
+        setTemporal((v) => resizeVector(v, t));
+      }
+
+      function loadFromPaste() {
+        setLocalError(null);
+        try {
+          const parsed = parsePropertiesText(paste);
+          setPlaces(parsed.places);
+          setTransitions(parsed.transitions);
+          setPre(resizeMatrix(parsed.pre, parsed.places, parsed.transitions));
+          setPost(resizeMatrix(parsed.post, parsed.places, parsed.transitions));
+          setM0(resizeVector(parsed.m0, parsed.places));
+          setTemporal(resizeVector(parsed.temporal, parsed.transitions));
+        } catch (err) {
+          setLocalError(err.message);
+        }
+      }
+
+      function submit() {
+        setLocalError(null);
+        try {
+          onAnalyze({
+            pre: pre.map(toInts),
+            post: post.map(toInts),
+            initialMarking: toInts(m0),
+            temporalTransitions: toInts(temporal),
+          });
+        } catch (err) {
+          setLocalError(err.message);
+        }
+      }
+
+      return (
+        <div className="panel">
+          <div className="row">
+            <label>Lugares:{' '}
+              <input className="dim" type="number" min="1" max={MAX_DIM} value={places}
+                onChange={(e) => applyDimensions(parseInt(e.target.value, 10), transitions)} />
+            </label>
+            <label>Transiciones:{' '}
+              <input className="dim" type="number" min="1" max={MAX_DIM} value={transitions}
+                onChange={(e) => applyDimensions(places, parseInt(e.target.value, 10))} />
+            </label>
+            <span className="hint">máximo {MAX_DIM}×{MAX_DIM}</span>
+          </div>
+
+          <MatrixEditor label="Matriz Pre (tokens que consume cada transición)" matrix={pre} onChange={setPre} />
+          <MatrixEditor label="Matriz Post (tokens que produce cada transición)" matrix={post} onChange={setPost} />
+          <VectorEditor label="Marcado inicial M₀" vector={m0} prefix="P" onChange={setM0} />
+          <VectorEditor label="Transiciones temporales (0 = inmediata)" vector={temporal} prefix="T" onChange={setTemporal} />
+
+          <h3>O pegá el contenido de un .properties</h3>
+          <textarea value={paste} onChange={(e) => setPaste(e.target.value)}
+            placeholder={'initial_marking.vector=2,0,1\ntemporary_transitions.vector=0,0\nmatrix.pre.0=1,0\nmatrix.post.0=0,1\n...'} />
+          <div className="row" style={{ marginTop: '.6rem' }}>
+            <button className="secondary" onClick={loadFromPaste} disabled={!paste.trim()}>Cargar desde el texto</button>
+          </div>
+
+          {localError && <p className="error">{localError}</p>}
+
+          <div className="row" style={{ marginTop: '.8rem' }}>
+            <button onClick={submit} disabled={loading}>{loading ? 'Analizando...' : 'Analizar esta red'}</button>
+          </div>
+        </div>
+      );
+    }
+
+    function Results({ data }) {
+      return (
+        <div>
+          <h2>Algorithm 4.1</h2>
+          <p>Resources, restrictions and idle places: {data.resourcePlaces}</p>
+          <Section title="T-invariants" lines={data.tInvariants} />
+          <Section title="PI of IT" lines={data.piOfIt} />
+          <Section title="PA of IT" lines={data.paOfIt} />
+          <p>Action places: {data.actionPlaces}</p>
+          <p className="stat">Max active threads: {data.maxActiveThreads}</p>
+          <p className="stat">Reachable markings: {data.reachableMarkings}</p>
+
+          <h2>Algorithm 4.2</h2>
+          <Section title="Segments" lines={data.segments} />
+          <p>Forks: {data.forks}</p>
+          <p>Joins: {data.joins}</p>
+          <Section title="Segment places" lines={data.segmentPlaces} />
+
+          <h2>Algorithm 4.3</h2>
+          <Section title="Threads per segment" lines={data.threadsPerSegment} />
+          <p className="stat">Maximum number of threads in the system = {data.totalMaxThreads}</p>
         </div>
       );
     }
 
     function App() {
+      const [nets, setNets] = useState([]);
+      const [selected, setSelected] = useState('');
+      const [mode, setMode] = useState('catalog');
       const [data, setData] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
 
-      function runAnalysis() {
+      useEffect(() => {
+        fetch('/api/nets')
+          .then(readResponse)
+          .then((list) => {
+            setNets(list);
+            if (list.length) setSelected(list[0].id);
+          })
+          .catch((err) => setError(err.message));
+      }, []);
+
+      async function run(request) {
         setLoading(true);
         setError(null);
-        fetch('/api/analysis')
-          .then((res) => {
-            if (!res.ok) throw new Error('Error del servidor: ' + res.status);
-            return res.json();
-          })
-          .then(setData)
-          .catch((err) => setError(err.message))
-          .finally(() => setLoading(false));
+        setData(null);
+        try {
+          setData(await request());
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
       }
 
-      useEffect(() => { runAnalysis(); }, []);
+      function analyzeCatalog() {
+        run(() => fetch('/api/analysis/' + encodeURIComponent(selected)).then(readResponse));
+      }
+
+      function analyzeCustom(net) {
+        run(() =>
+          fetch('/api/analysis', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(net),
+          }).then(readResponse)
+        );
+      }
 
       return (
         <div>
           <h1>Concurrency Monitor</h1>
-          <button onClick={runAnalysis} disabled={loading}>
-            {loading ? 'Analizando...' : 'Run'}
-          </button>
+
+          <div className="row">
+            <label>
+              <input type="radio" checked={mode === 'catalog'} onChange={() => setMode('catalog')} /> Red del catálogo
+            </label>
+            <label>
+              <input type="radio" checked={mode === 'custom'} onChange={() => setMode('custom')} /> Cargar una red propia
+            </label>
+          </div>
+
+          {mode === 'catalog' && (
+            <div className="row">
+              <select value={selected} onChange={(e) => setSelected(e.target.value)}>
+                {nets.map((net) => <option key={net.id} value={net.id}>{net.name}</option>)}
+              </select>
+              <button onClick={analyzeCatalog} disabled={loading || !selected}>
+                {loading ? 'Analizando...' : 'Analizar'}
+              </button>
+            </div>
+          )}
+
+          {mode === 'custom' && <CustomNetForm onAnalyze={analyzeCustom} loading={loading} />}
 
           {error && <p className="error">{error}</p>}
 
-          {data && (
-            <div>
-              <h2>Algorithm 4.1</h2>
-              <p>Resources, restrictions and idle places: {data.resourcePlaces}</p>
-              <Section title="T-invariants" lines={data.tInvariants} />
-              <Section title="PI of IT" lines={data.piOfIt} />
-              <Section title="PA of IT" lines={data.paOfIt} />
-              <p>Action places: {data.actionPlaces}</p>
-              <p className="stat">Max active threads: {data.maxActiveThreads}</p>
-              <p className="stat">Reachable markings: {data.reachableMarkings}</p>
-
-              <h2>Algorithm 4.2</h2>
-              <Section title="Segments" lines={data.segments} />
-              <p>Forks: {data.forks}</p>
-              <p>Joins: {data.joins}</p>
-              <Section title="Segment places" lines={data.segmentPlaces} />
-
-              <h2>Algorithm 4.3</h2>
-              <Section title="Threads per segment" lines={data.threadsPerSegment} />
-              <p className="stat">
-                Maximum number of threads in the system = {data.totalMaxThreads}
-              </p>
-            </div>
-          )}
+          {data && <Results data={data} />}
         </div>
       );
     }

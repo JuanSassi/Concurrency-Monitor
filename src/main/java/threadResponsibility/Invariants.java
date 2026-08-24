@@ -29,6 +29,17 @@ public class Invariants {
 
   private static final int MAX_COMBINATION_COEFFICIENT = 4;
 
+  /**
+   * Ceiling on the size of the combination search.
+   *
+   * <p>The search tries every coefficient from {@code -MAX_COMBINATION_COEFFICIENT} to {@code
+   * +MAX_COMBINATION_COEFFICIENT} on every nullspace basis vector, so it visits 9^k leaves for a
+   * nullspace of dimension k. That grows fast enough to matter: k=7 is about 4.8 million leaves and
+   * runs fine, k=8 is 43 million and does not. The two catalog nets peak at k=7, so this limit
+   * leaves them untouched while stopping a submitted net from pinning a request thread for hours.
+   */
+  private static final long MAX_COMBINATIONS = 10_000_000L;
+
   /** List of minimal P-invariants */
   private final List<List<Integer>> pInvariant;
 
@@ -46,6 +57,7 @@ public class Invariants {
    * </ul>
    *
    * @param w incidence matrix (Post - Pre) of the Petri net
+   * @throws PetriNetValidationException if the net's nullspace is too large to search exhaustively
    */
   public Invariants(int[][] w) {
     int[][] wt = Matrix.transposed(w);
@@ -68,9 +80,12 @@ public class Invariants {
    *
    * @param matrix matrix for which invariants are sought (W for T-invariants, W^T for P-invariants)
    * @return list of minimal invariant vectors as lists of integers
+   * @throws PetriNetValidationException if the search space exceeds {@link #MAX_COMBINATIONS}
    */
   public List<List<Integer>> computeInvariants(int[][] matrix) {
     List<int[]> nullBasis = Nullspace.compute(matrix);
+    validateSearchSpace(nullBasis.size());
+
     Set<List<Integer>> all = new HashSet<>();
 
     // Generate all non-negative linear combinations
@@ -86,6 +101,30 @@ public class Invariants {
     // Sort by sum of components (simplest invariants first)
     minimal.sort(Comparator.comparingInt(v -> v.stream().mapToInt(Integer::intValue).sum()));
     return minimal;
+  }
+
+  /**
+   * Rejects nets whose exhaustive combination search would be impractically large.
+   *
+   * @param basisSize dimension of the nullspace
+   * @throws PetriNetValidationException if 9^basisSize exceeds {@link #MAX_COMBINATIONS}
+   */
+  private void validateSearchSpace(int basisSize) {
+    long branching = 2L * MAX_COMBINATION_COEFFICIENT + 1;
+    long combinations = 1;
+
+    for (int i = 0; i < basisSize; i++) {
+      combinations *= branching;
+      if (combinations > MAX_COMBINATIONS) {
+        throw new PetriNetValidationException(
+            "La red es demasiado compleja para analizar: el espacio nulo tiene dimensión "
+                + basisSize
+                + ", lo que requiere más de "
+                + MAX_COMBINATIONS
+                + " combinaciones. Probá con una red más chica o con menos transiciones"
+                + " independientes.");
+      }
+    }
   }
 
   /**

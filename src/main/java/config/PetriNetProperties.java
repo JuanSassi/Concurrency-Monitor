@@ -99,7 +99,8 @@ public final class PetriNetProperties {
   public int[] getIntArray(String key) {
     String value = properties.getProperty(key);
     if (value == null || value.trim().isEmpty()) {
-      throw new ConfigurationException("The key was not found or is empty: " + key + " (" + source + ")");
+      throw new ConfigurationException(
+          "The key was not found or is empty: " + key + " (" + source + ")");
     }
 
     String[] parts = value.split(",");

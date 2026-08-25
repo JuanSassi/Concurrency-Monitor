@@ -6,9 +6,9 @@ import java.util.List;
 /**
  * Renders analysis results as display-ready strings.
  *
- * <p>Both output channels — the console ({@code AlgorithmsConsolePrinter}) and the REST API
- * ({@code AnalysisController}) — show the same information in the same notation, so the formatting
- * rules live here rather than being reimplemented on each side.
+ * <p>Both output channels — the console ({@code AlgorithmsConsolePrinter}) and the REST API ({@code
+ * AnalysisController}) — show the same information in the same notation, so the formatting rules
+ * live here rather than being reimplemented on each side.
  *
  * <p>Two distinct shapes are handled, and confusing them silently produces wrong output:
  *

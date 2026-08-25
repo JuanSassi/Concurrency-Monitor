@@ -73,7 +73,7 @@ public class AnalysisController {
    * @return the formatted analysis results
    */
   @GetMapping("/api/analysis/{id}")
-    public AnalysisResponse getCatalogAnalysis(@PathVariable("id") String id) {
+  public AnalysisResponse getCatalogAnalysis(@PathVariable("id") String id) {
     return analyze(catalog.load(id));
   }
 
@@ -170,7 +170,7 @@ public class AnalysisController {
     return new ApiError("Error de configuración del servidor: " + e.getMessage());
   }
 
-    /**
+  /**
    * Catch-all: cualquier excepción no prevista se devuelve legible en vez del genérico de Spring.
    *
    * @param e la excepción inesperada

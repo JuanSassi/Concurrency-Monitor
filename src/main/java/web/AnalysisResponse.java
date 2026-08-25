@@ -15,7 +15,8 @@ import java.util.List;
  * @param forks fork places, e.g. {@code {P1}}
  * @param joins join places, e.g. {@code {P4}}
  * @param segmentPlaces one formatted line per segment's places (forks/joins included)
- * @param threadsPerSegment one formatted line per segment's max threads, e.g. {@code "Max(MS1) = 1"}
+ * @param threadsPerSegment one formatted line per segment's max threads, e.g. {@code "Max(MS1) =
+ *     1"}
  * @param totalMaxThreads sum of threadsPerSegment (Algorithm 4.3 result)
  * @author Sassi Juan Ignacio
  */

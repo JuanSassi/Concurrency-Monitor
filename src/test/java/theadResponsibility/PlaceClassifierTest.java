@@ -1,201 +1,196 @@
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.TreeSet;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for PlaceClassifier using the Huang S3PR net (exampleHuang.properties).
+ * Unit tests for {@link PlaceClassifier}.
  *
- * <p>Expected results validated against the paper (Ventre & Micolini, 2021):
- *
- * <ul>
- *   <li>Action places: {P1, P2, P3, P4, P8, P9, P10} → indices {1, 2, 3, 4, 8, 9, 10}
- *   <li>Resource/idle/restriction places: {P0, P5, P6, P7, P11, P12, P13} → indices {0, 5, 6, 7,
- *       11, 12, 13}
- *   <li>PA of IT1 → [1, 3, 4]
- *   <li>PA of IT2 → [1, 2, 4]
- *   <li>PA of IT3 → [8, 9, 10]
- * </ul>
+ * <p>La clasificación depende de los P-invariantes, del marcado inicial y de la matriz de
+ * incidencia. Los tests sobre redes reales reutilizan un cálculo cacheado, porque construir
+ * {@link Invariants} para exampleHuang cuesta más de un segundo.
  *
  * @author Sassi Juan Ignacio
  */
-@DisplayName("PlaceClassifier — exampleHuang")
+@DisplayName("PlaceClassifier")
 class PlaceClassifierTest {
 
-  /** Shared classifier instance built once per test class. */
-  private PlaceClassifier classifier;
+  /** Clasificador de exampleHuang, calculado una sola vez. */
+  private static PlaceClassifier huangClassifier;
 
-  /** Expected action place indices for the Huang net. */
-  private static final Set<Integer> EXPECTED_ACTION_PLACES = Set.of(1, 2, 3, 4, 8, 9, 10);
-
-  /** Expected resource/idle/restriction place indices for the Huang net. */
-  private static final Set<Integer> EXPECTED_RESOURCE_PLACES = Set.of(0, 5, 6, 7, 11, 12, 13);
-
-  @BeforeEach
-  void setUp() {
-    int[][] pre = PetrinetLoader.getPreMatrix();
-    int[][] post = PetrinetLoader.getPostMatrix();
-    int[] m0 = PetrinetLoader.getInitialMarkingVector();
-    int[][] w = Matrix.subtract(post, pre);
-    Invariants inv = new Invariants(w);
-    classifier = new PlaceClassifier(pre, post, m0, inv);
+  /**
+   * Devuelve el clasificador de exampleHuang, construyéndolo la primera vez.
+   *
+   * @return el clasificador ya poblado
+   */
+  private static synchronized PlaceClassifier huang() {
+    if (huangClassifier == null) {
+      PetriNetDefinition d =
+          PetriNetProperties.fromResource("exampleHuang.properties").toDefinition();
+      int[][] pre = d.pre();
+      int[][] post = d.post();
+      Invariants invariants = new Invariants(Matrix.subtract(post, pre));
+      huangClassifier = new PlaceClassifier(pre, post, d.initialMarking(), invariants);
+    }
+    return huangClassifier;
   }
 
-  // ── construcción ─────────────────────────────────────────
+  // ── invariantes de la clasificación ───────────────────────
 
   @Test
-  @DisplayName("constructor no lanza excepción con la red de Huang")
-  void testConstructorDoesNotThrow() {
-    assertNotNull(classifier);
-  }
-
-  @Test
-  @DisplayName("getActionPlaces no retorna null")
-  void testGetActionPlacesNotNull() {
-    assertNotNull(classifier.getActionPlaces());
+  @DisplayName("acción y recurso son conjuntos disjuntos")
+  void testSetsAreDisjoint() {
+    Set<Integer> intersection = new HashSet<>(huang().getActionPlaces());
+    intersection.retainAll(huang().getResourcePlaces());
+    assertTrue(intersection.isEmpty(), "plazas clasificadas dos veces: " + intersection);
   }
 
   @Test
-  @DisplayName("getPaOfIt no retorna null")
-  void testGetPaOfItNotNull() {
-    assertNotNull(classifier.getPaOfIt());
-  }
-
-  // ── action places ─────────────────────────────────────────
-
-  @Test
-  @DisplayName("action places → {1, 2, 3, 4, 8, 9, 10}")
-  void testActionPlacesValues() {
-    assertEquals(EXPECTED_ACTION_PLACES, classifier.getActionPlaces());
+  @DisplayName("en exampleHuang toda plaza queda clasificada")
+  void testEveryPlaceIsClassified() {
+    Set<Integer> all = new TreeSet<>(huang().getActionPlaces());
+    all.addAll(huang().getResourcePlaces());
+    assertEquals(14, all.size(), "quedaron plazas sin clasificar");
   }
 
   @Test
-  @DisplayName("action places → cantidad 7")
-  void testActionPlacesCount() {
-    assertEquals(7, classifier.getActionPlaces().size());
+  @DisplayName("GOLDEN: clasificación de exampleHuang")
+  void testHuangClassification() {
+    assertEquals(Set.of(1, 2, 3, 4, 8, 9, 10), new TreeSet<>(huang().getActionPlaces()));
+    assertEquals(Set.of(0, 5, 6, 7, 11, 12, 13), new TreeSet<>(huang().getResourcePlaces()));
   }
 
   @Test
-  @DisplayName("action places no contiene plazas de recursos")
-  void testActionPlacesDisjointFromResources() {
-    Set<Integer> action = classifier.getActionPlaces();
-    for (Integer resource : EXPECTED_RESOURCE_PLACES) {
-      assertFalse(
-          action.contains(resource),
-          "La plaza de recurso " + resource + " no debe estar en action places");
+  @DisplayName("la clasificación es determinista entre construcciones")
+  void testClassificationIsDeterministic() {
+    // Fase 2 recorre un HashSet de candidatos; si ese recorrido variara, la plaza idle
+    // elegida podría cambiar de una corrida a otra y con ella toda la clasificación.
+    PetriNetDefinition d =
+        PetriNetProperties.fromResource("travelAgencySystem.properties").toDefinition();
+    Invariants invariants = new Invariants(Matrix.subtract(d.post(), d.pre()));
+
+    PlaceClassifier first = new PlaceClassifier(d.pre(), d.post(), d.initialMarking(), invariants);
+    PlaceClassifier second = new PlaceClassifier(d.pre(), d.post(), d.initialMarking(), invariants);
+
+    assertEquals(first.getActionPlaces(), second.getActionPlaces());
+    assertEquals(first.getResourcePlaces(), second.getResourcePlaces());
+  }
+
+  // ── reglas de clasificación ───────────────────────────────
+
+  @Test
+  @DisplayName("una plaza en varios P-invariantes es plaza de acción")
+  void testPlaceInManyInvariantsIsAction() {
+    // P1 aparece en los dos P-invariantes; P0 y P2 en uno solo cada uno.
+    int[][] pre = {{1, 0}, {0, 1}, {1, 0}};
+    int[][] post = {{0, 1}, {1, 0}, {0, 1}};
+    PlaceClassifier classifier =
+        new PlaceClassifier(pre, post, new int[] {1, 0, 1}, fakeInvariants(pre, post));
+
+    assertTrue(classifier.getActionPlaces().contains(1));
+  }
+
+  @Test
+  @DisplayName("sin P-invariantes no se clasifica ninguna plaza")
+  void testNoInvariantsClassifiesNothing() {
+    // La fase 1 cuenta apariciones en P-invariantes: con la lista vacía todos los
+    // contadores quedan en 0 y ninguna plaza entra en ningún conjunto.
+    int[][] pre = {{0, 0}, {0, 0}};
+    int[][] post = {{1, 1}, {1, 1}};
+    Invariants empty = new Invariants(Matrix.subtract(post, pre));
+    assertTrue(empty.getPInvariants().isEmpty(), "precondición del test");
+
+    PlaceClassifier classifier = new PlaceClassifier(pre, post, new int[] {0, 0}, empty);
+
+    assertTrue(classifier.getActionPlaces().isEmpty());
+    assertTrue(classifier.getResourcePlaces().isEmpty());
+  }
+
+  @Test
+  @DisplayName("una plaza sin tokens iniciales no puede ser idle")
+  void testIdleRequiresInitialTokens() {
+    // Ambas plazas están en un único P-invariante, así que compiten por ser la idle;
+    // la que arranca vacía no puede serlo y cae en plazas de acción.
+    int[][] pre = {{1, 0}, {0, 1}};
+    int[][] post = {{0, 1}, {1, 0}};
+    PlaceClassifier classifier =
+        new PlaceClassifier(pre, post, new int[] {0, 1}, fakeInvariants(pre, post));
+
+    assertFalse(classifier.getResourcePlaces().contains(0), "P0 arranca vacía, no es idle");
+  }
+
+  // ── aislamiento del estado ────────────────────────────────
+
+  @Test
+  @DisplayName("mutar el marcado original no cambia la clasificación")
+  void testDefensiveCopyOfMarking() {
+    int[][] pre = {{1, 0}, {0, 1}};
+    int[][] post = {{0, 1}, {1, 0}};
+    int[] m0 = {1, 0};
+    PlaceClassifier classifier = new PlaceClassifier(pre, post, m0, fakeInvariants(pre, post));
+    Set<Integer> before = new TreeSet<>(classifier.getResourcePlaces());
+
+    m0[0] = 0;
+    m0[1] = 99;
+
+    assertEquals(before, new TreeSet<>(classifier.getResourcePlaces()));
+  }
+
+  @Test
+  @DisplayName("los conjuntos devueltos son inmutables")
+  void testReturnedSetsAreUnmodifiable() {
+    assertThrows(UnsupportedOperationException.class, () -> huang().getActionPlaces().add(99));
+    assertThrows(UnsupportedOperationException.class, () -> huang().getResourcePlaces().clear());
+  }
+
+  // ── delegación en TInvariantPlaces ────────────────────────
+
+  @Test
+  @DisplayName("getPaOfIt y getPiOfIt delegan en TInvariantPlaces")
+  void testDelegationToTInvariantPlaces() {
+    assertEquals(3, huang().getPiOfIt().size(), "una entrada por T-invariante");
+    assertEquals(3, huang().getPaOfIt().size());
+    assertEquals(
+        java.util.List.of(
+            java.util.List.of(1, 3, 4), java.util.List.of(1, 2, 4), java.util.List.of(8, 9, 10)),
+        huang().getPaOfIt());
+  }
+
+  @Test
+  @DisplayName("paOfIt solo contiene plazas clasificadas como de acción")
+  void testPaOfItOnlyHasActionPlaces() {
+    for (java.util.List<Integer> group : huang().getPaOfIt()) {
+      assertTrue(
+          huang().getActionPlaces().containsAll(group), "PA contiene una plaza de recurso: " + group);
     }
   }
 
   @Test
-  @DisplayName("action places cubre exactamente las plazas esperadas del paper")
-  void testActionPlacesMatchPaper() {
-    assertTrue(classifier.getActionPlaces().containsAll(EXPECTED_ACTION_PLACES));
-    assertTrue(EXPECTED_ACTION_PLACES.containsAll(classifier.getActionPlaces()));
-  }
-
-  // ── resource places (indirecta via partición) ─────────────
-
-  @Test
-  @DisplayName("action places + resource places cubren todas las plazas (partición completa)")
-  void testPartitionCoversAllPlaces() {
-    int numPlaces = PetrinetLoader.getNumPlaces();
-    Set<Integer> action = classifier.getActionPlaces();
-
-    for (int p = 0; p < numPlaces; p++) {
-      boolean inAction = action.contains(p);
-      boolean inResource = EXPECTED_RESOURCE_PLACES.contains(p);
-      assertTrue(inAction || inResource, "La plaza " + p + " no está en ninguna categoría");
-    }
-  }
-
-  @Test
-  @DisplayName("action places y resource places son disjuntos")
-  void testPartitionIsDisjoint() {
-    Set<Integer> action = classifier.getActionPlaces();
-    for (Integer p : action) {
-      assertFalse(
-          EXPECTED_RESOURCE_PLACES.contains(p), "La plaza " + p + " aparece en ambas categorías");
-    }
-  }
-
-  // ── PA of IT ─────────────────────────────────────────────
-
-  @Test
-  @DisplayName("getPaOfIt → 3 entradas (una por T-invariante)")
-  void testPaOfItSize() {
-    assertEquals(3, classifier.getPaOfIt().size());
-  }
-
-  @Test
-  @DisplayName("PA of IT1 → [1, 3, 4]")
-  void testPaOfIt1() {
-    assertEquals(List.of(1, 3, 4), classifier.getPaOfIt().get(0));
-  }
-
-  @Test
-  @DisplayName("PA of IT2 → [1, 2, 4]")
-  void testPaOfIt2() {
-    assertEquals(List.of(1, 2, 4), classifier.getPaOfIt().get(1));
-  }
-
-  @Test
-  @DisplayName("PA of IT3 → [8, 9, 10]")
-  void testPaOfIt3() {
-    assertEquals(List.of(8, 9, 10), classifier.getPaOfIt().get(2));
-  }
-
-  @Test
-  @DisplayName("todas las plazas en PA of IT son action places")
-  void testPaOfItContainsOnlyActionPlaces() {
-    Set<Integer> action = classifier.getActionPlaces();
-    for (List<Integer> pa : classifier.getPaOfIt()) {
-      for (Integer p : pa) {
-        assertTrue(action.contains(p), "La plaza " + p + " en PA of IT no es una action place");
+  @DisplayName("piOfIt contiene plazas de acción y de recurso mezcladas")
+  void testPiOfItMixesBothKinds() {
+    boolean hasResource = false;
+    for (java.util.List<Integer> group : huang().getPiOfIt()) {
+      for (Integer place : group) {
+        hasResource |= huang().getResourcePlaces().contains(place);
       }
     }
+    assertTrue(hasResource, "PI debería incluir también plazas de recurso");
   }
 
-  @Test
-  @DisplayName("ninguna lista de PA of IT está vacía")
-  void testPaOfItNoEmptyEntries() {
-    for (int i = 0; i < classifier.getPaOfIt().size(); i++) {
-      assertFalse(
-          classifier.getPaOfIt().get(i).isEmpty(), "PA of IT" + (i + 1) + " no debe estar vacío");
-    }
-  }
-
-  @Test
-  @DisplayName("PA of IT están ordenados ascendentemente por índice de plaza")
-  void testPaOfItSorted() {
-    for (List<Integer> pa : classifier.getPaOfIt()) {
-      for (int i = 1; i < pa.size(); i++) {
-        assertTrue(
-            pa.get(i - 1) < pa.get(i),
-            "PA of IT no está ordenado: " + pa.get(i - 1) + " >= " + pa.get(i));
-      }
-    }
-  }
-
-  // ── inmutabilidad (EI_EXPOSE_REP) ────────────────────────
-
-  @Test
-  @DisplayName("getActionPlaces retorna vista no modificable")
-  void testGetActionPlacesIsUnmodifiable() {
-    Set<Integer> action = classifier.getActionPlaces();
-    assertThrows(UnsupportedOperationException.class, () -> action.add(99));
-  }
-
-  @Test
-  @DisplayName("getPaOfIt retorna vista no modificable")
-  void testGetPaOfItIsUnmodifiable() {
-    List<List<Integer>> paOfIt = classifier.getPaOfIt();
-    assertThrows(UnsupportedOperationException.class, () -> paOfIt.add(List.of(99)));
+  /**
+   * Construye un calculador de invariantes para la red dada.
+   *
+   * @param pre matriz de pre-incidencia
+   * @param post matriz de post-incidencia
+   * @return los invariantes de esa red
+   */
+  private static Invariants fakeInvariants(int[][] pre, int[][] post) {
+    return new Invariants(Matrix.subtract(post, pre));
   }
 }

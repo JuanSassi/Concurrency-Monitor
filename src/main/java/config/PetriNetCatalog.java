@@ -60,7 +60,8 @@ public final class PetriNetCatalog {
     this.filesById = readEntries(config);
 
     if (filesById.isEmpty()) {
-      throw new ConfigurationException("No '" + ENTRY_PREFIX + "N' entries found in " + CONFIG_FILE);
+      throw new ConfigurationException(
+          "No '" + ENTRY_PREFIX + "N' entries found in " + CONFIG_FILE);
     }
 
     String configured = config.getProperty(DEFAULT_KEY, "").trim();

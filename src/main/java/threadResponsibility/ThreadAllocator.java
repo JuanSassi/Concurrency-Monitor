@@ -172,7 +172,7 @@ public class ThreadAllocator {
     Collections.sort(sorted);
     return sorted;
   }
-  
+
   /**
    * Computes the maximum number of threads for each segment (Algorithm 4.3).
    *

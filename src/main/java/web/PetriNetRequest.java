@@ -47,7 +47,8 @@ public record PetriNetRequest(
               + " 'temporalTransitions'.");
     }
     if (pre.length == 0 || pre[0] == null || pre[0].length == 0) {
-      throw new PetriNetValidationException("La red debe tener al menos un lugar y una transición.");
+      throw new PetriNetValidationException(
+          "La red debe tener al menos un lugar y una transición.");
     }
   }
 

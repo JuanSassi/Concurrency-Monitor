@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
  * <p>Covers compute(), Matrix.toRational(), Matrix.gaussianElimination(), and buildBasisVector().
  * The key mathematical property verified is W*x = 0 for every basis vector x returned by compute().
  *
- * <p>Los casos que dependen de las redes reales del proyecto viven en {@code
- * PetriNetFixturesTest}; acá todo es autocontenido, con matrices escritas en el propio test.
+ * <p>Los casos que dependen de las redes reales del proyecto viven en {@code PetriNetFixturesTest};
+ * acá todo es autocontenido, con matrices escritas en el propio test.
  *
  * @author Sassi Juan Ignacio
  */

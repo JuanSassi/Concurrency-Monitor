@@ -140,7 +140,10 @@ class PetriNetFixturesTest {
     for (String net : new String[] {HUANG, TRAVEL}) {
       int[][] wt = transposedIncidence(net);
       int places = wt[0].length;
-      assertEquals(places, rank(wt) + placeInvariants(net).size(), "falla el teorema rango-nulidad en " + net);
+      assertEquals(
+          places,
+          rank(wt) + placeInvariants(net).size(),
+          "falla el teorema rango-nulidad en " + net);
     }
   }
 

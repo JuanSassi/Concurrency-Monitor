@@ -227,8 +227,7 @@ class AnalysisControllerTest {
   @Test
   @DisplayName("el total del payload es la suma de los hilos por segmento")
   void testTotalIsConsistent() {
-    assertEquals(
-        defaultResponse().threadsPerSegment().size(), defaultResponse().segments().size());
+    assertEquals(defaultResponse().threadsPerSegment().size(), defaultResponse().segments().size());
     assertTrue(defaultResponse().totalMaxThreads() >= defaultResponse().maxActiveThreads());
   }
 
@@ -293,8 +292,7 @@ class AnalysisControllerTest {
   @Test
   @DisplayName("las rutas GET y POST son las esperadas")
   void testRoutes() throws NoSuchMethodException {
-    assertEquals(
-        "/api/nets", method("listNets").getAnnotation(GetMapping.class).value()[0]);
+    assertEquals("/api/nets", method("listNets").getAnnotation(GetMapping.class).value()[0]);
     assertEquals(
         "/api/analysis", method("getDefaultAnalysis").getAnnotation(GetMapping.class).value()[0]);
     assertEquals(
@@ -325,7 +323,9 @@ class AnalysisControllerTest {
             .value());
     assertEquals(
         HttpStatus.BAD_REQUEST,
-        method("onMalformedBody", org.springframework.http.converter.HttpMessageNotReadableException.class)
+        method(
+                "onMalformedBody",
+                org.springframework.http.converter.HttpMessageNotReadableException.class)
             .getAnnotation(ResponseStatus.class)
             .value());
     assertEquals(

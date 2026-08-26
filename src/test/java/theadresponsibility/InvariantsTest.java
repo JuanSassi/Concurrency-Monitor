@@ -46,7 +46,8 @@ class InvariantsTest {
   @DisplayName("ciclo de dos plazas: un P-invariante y un T-invariante")
   void testSimpleCycle() {
     // P0 -T0-> P1 -T1-> P0. Se conserva la suma de tokens y disparar T0,T1 vuelve al inicio.
-    Invariants inv = new Invariants(incidence(new int[][] {{1, 0}, {0, 1}}, new int[][] {{0, 1}, {1, 0}}));
+    Invariants inv =
+        new Invariants(incidence(new int[][] {{1, 0}, {0, 1}}, new int[][] {{0, 1}, {1, 0}}));
 
     assertEquals(List.of(List.of(1, 1)), inv.getPInvariants());
     assertEquals(List.of(List.of(1, 1)), inv.getTInvariants());
@@ -155,10 +156,8 @@ class InvariantsTest {
   @Test
   @DisplayName("no hay invariantes duplicados")
   void testNoDuplicates() {
-    assertEquals(
-        new HashSet<>(huang().getPInvariants()).size(), huang().getPInvariants().size());
-    assertEquals(
-        new HashSet<>(huang().getTInvariants()).size(), huang().getTInvariants().size());
+    assertEquals(new HashSet<>(huang().getPInvariants()).size(), huang().getPInvariants().size());
+    assertEquals(new HashSet<>(huang().getTInvariants()).size(), huang().getTInvariants().size());
   }
 
   // ── redes reales ──────────────────────────────────────────
@@ -201,7 +200,8 @@ class InvariantsTest {
   void testHuangConservesTokens() {
     // Un P-invariante x cumple M·x = M₀·x en todo marcado alcanzable. Acá se verifica que
     // el valor conservado sea positivo: un invariante que arranca en 0 no restringe nada.
-    int[] m0 = PetriNetProperties.fromResource("exampleHuang.properties").toDefinition().initialMarking();
+    int[] m0 =
+        PetriNetProperties.fromResource("exampleHuang.properties").toDefinition().initialMarking();
     for (List<Integer> inv : huang().getPInvariants()) {
       int tokens = 0;
       for (int p = 0; p < inv.size(); p++) {
@@ -219,7 +219,8 @@ class InvariantsTest {
     // 9^8 = 43.046.721 supera el tope de 10.000.000 combinaciones.
     PetriNetValidationException e =
         assertThrows(PetriNetValidationException.class, () -> new Invariants(new int[1][8]));
-    assertTrue(e.getMessage().contains("8"), "el mensaje debe indicar la dimensión del espacio nulo");
+    assertTrue(
+        e.getMessage().contains("8"), "el mensaje debe indicar la dimensión del espacio nulo");
   }
 
   @Test
@@ -237,8 +238,7 @@ class InvariantsTest {
   void testReturnedListsAreUnmodifiable() {
     assertThrows(
         UnsupportedOperationException.class, () -> huang().getPInvariants().add(List.of(1)));
-    assertThrows(
-        UnsupportedOperationException.class, () -> huang().getTInvariants().clear());
+    assertThrows(UnsupportedOperationException.class, () -> huang().getTInvariants().clear());
   }
 
   // ── comportamiento documentado, no deseable ───────────────
@@ -252,7 +252,8 @@ class InvariantsTest {
     java.io.PrintStream original = System.out;
     java.io.ByteArrayOutputStream captured = new java.io.ByteArrayOutputStream();
     try {
-      System.setOut(new java.io.PrintStream(captured, true, java.nio.charset.StandardCharsets.UTF_8));
+      System.setOut(
+          new java.io.PrintStream(captured, true, java.nio.charset.StandardCharsets.UTF_8));
       new Invariants(new int[][] {{1, 1}, {1, 1}});
     } finally {
       System.setOut(original);

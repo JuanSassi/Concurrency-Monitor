@@ -34,8 +34,7 @@ class TInvariantPlacesTest {
   @DisplayName("piOfIt junta las plazas conectadas por pre o por post")
   void testPiOfIt() {
     // El T-invariante activa sólo T0. P0 y P2 lo consumen, P1 lo produce.
-    TInvariantPlaces places =
-        new TInvariantPlaces(pre(), post(), List.of(List.of(1, 0)), Set.of());
+    TInvariantPlaces places = new TInvariantPlaces(pre(), post(), List.of(List.of(1, 0)), Set.of());
 
     assertEquals(List.of(List.of(0, 1, 2)), places.getPiOfIt());
   }
@@ -85,7 +84,8 @@ class TInvariantPlacesTest {
 
     assertEquals(3, places.getPiOfIt().size());
     assertEquals(3, places.getPaOfIt().size());
-    assertEquals(List.of(0, 1, 2), places.getPiOfIt().get(2), "el tercero activa ambas transiciones");
+    assertEquals(
+        List.of(0, 1, 2), places.getPiOfIt().get(2), "el tercero activa ambas transiciones");
   }
 
   // ── coeficientes ──────────────────────────────────────────
@@ -94,8 +94,7 @@ class TInvariantPlacesTest {
   @DisplayName("solo cuentan las transiciones con coeficiente positivo")
   void testOnlyPositiveCoefficientsCount() {
     // T1 conecta P1 nada más, pero su coeficiente es 0: no debe aportar plazas.
-    TInvariantPlaces places =
-        new TInvariantPlaces(pre(), post(), List.of(List.of(1, 0)), Set.of());
+    TInvariantPlaces places = new TInvariantPlaces(pre(), post(), List.of(List.of(1, 0)), Set.of());
 
     assertTrue(places.getPiOfIt().get(0).containsAll(List.of(0, 2)));
   }

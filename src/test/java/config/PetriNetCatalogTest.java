@@ -172,10 +172,8 @@ class PetriNetCatalogTest {
     // Verifica la propiedad de seguridad documentada en la clase: el id del llamador nunca
     // llega al classloader. Si esto dejara de valer, un cliente podría leer cualquier
     // recurso del classpath pasando su nombre directamente.
-    assertThrows(
-        PetriNetValidationException.class, () -> catalog.load("config.properties"));
-    assertThrows(
-        PetriNetValidationException.class, () -> catalog.load("../../etc/passwd"));
+    assertThrows(PetriNetValidationException.class, () -> catalog.load("config.properties"));
+    assertThrows(PetriNetValidationException.class, () -> catalog.load("../../etc/passwd"));
   }
 
   // ── independencia entre instancias ────────────────────────

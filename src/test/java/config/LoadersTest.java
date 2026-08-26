@@ -34,7 +34,8 @@ class LoadersTest {
 
     assertEquals(pre.length, post.length, "distinta cantidad de lugares");
     for (int i = 0; i < pre.length; i++) {
-      assertEquals(pre[i].length, post[i].length, "distinta cantidad de transiciones en la fila " + i);
+      assertEquals(
+          pre[i].length, post[i].length, "distinta cantidad de transiciones en la fila " + i);
     }
   }
 
@@ -90,8 +91,7 @@ class LoadersTest {
   @Test
   @DisplayName("el marcado inicial tiene un elemento por lugar")
   void testMarkingLength() {
-    assertEquals(
-        PetrinetLoader.getNumPlaces(), PetrinetLoader.getInitialMarkingVector().length);
+    assertEquals(PetrinetLoader.getNumPlaces(), PetrinetLoader.getInitialMarkingVector().length);
   }
 
   @Test
@@ -128,8 +128,7 @@ class LoadersTest {
 
     assertArrayEquals(PetrinetLoader.getPreMatrix(), viaProperties.pre());
     assertArrayEquals(PetrinetLoader.getPostMatrix(), viaProperties.post());
-    assertArrayEquals(
-        PetrinetLoader.getInitialMarkingVector(), viaProperties.initialMarking());
+    assertArrayEquals(PetrinetLoader.getInitialMarkingVector(), viaProperties.initialMarking());
     assertArrayEquals(
         PetrinetLoader.getTemporalTransitionsVector(), viaProperties.temporalTransitions());
   }

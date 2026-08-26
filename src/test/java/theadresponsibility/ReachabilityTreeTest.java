@@ -99,8 +99,7 @@ class ReachabilityTreeTest {
   @Test
   @DisplayName("las plazas de acción quedan ordenadas de forma ascendente")
   void testActionPlacesAreSorted() {
-    ReachabilityTree tree =
-        new ReachabilityTree(new java.util.HashSet<>(List.of(1, 0)), cycle(1));
+    ReachabilityTree tree = new ReachabilityTree(new java.util.HashSet<>(List.of(1, 0)), cycle(1));
     assertEquals(List.of(0, 1), tree.getSortedActionPlaces());
   }
 
@@ -173,8 +172,7 @@ class ReachabilityTreeTest {
   @DisplayName("getSortedActionPlaces es inmutable")
   void testSortedActionPlacesIsUnmodifiable() {
     ReachabilityTree tree = new ReachabilityTree(Set.of(0, 1), cycle(1));
-    assertThrows(
-        UnsupportedOperationException.class, () -> tree.getSortedActionPlaces().add(9));
+    assertThrows(UnsupportedOperationException.class, () -> tree.getSortedActionPlaces().add(9));
   }
 
   // ── transiciones temporales ───────────────────────────────

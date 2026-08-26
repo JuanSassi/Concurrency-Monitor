@@ -225,8 +225,7 @@ class ThreadAllocatorTest {
   @DisplayName("el constructor sin argumentos usa la red de config.properties")
   void testNoArgConstructorUsesConfiguredNet() {
     ThreadAllocator fromConfig = new ThreadAllocator();
-    assertEquals(
-        PetrinetLoader.getNumPlaces(), fromConfig.getPetriNet().getNumPlaces());
+    assertEquals(PetrinetLoader.getNumPlaces(), fromConfig.getPetriNet().getNumPlaces());
   }
 
   // ── propagación de errores ────────────────────────────────

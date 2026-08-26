@@ -120,7 +120,8 @@ class PetriNetPropertiesTest {
   @DisplayName("el mensaje de error nombra la clave y la fuente")
   void testErrorMessageMentionsKeyAndSource() {
     ConfigurationException e =
-        assertThrows(ConfigurationException.class, () -> props("otra", "1").getIntArray("faltante"));
+        assertThrows(
+            ConfigurationException.class, () -> props("otra", "1").getIntArray("faltante"));
     assertTrue(e.getMessage().contains("faltante"), "debe nombrar la clave");
     assertTrue(e.getMessage().contains(SOURCE), "debe nombrar la fuente");
   }
@@ -171,8 +172,7 @@ class PetriNetPropertiesTest {
   void testGetMatrixInconsistentWidth() {
     ConfigurationException e =
         assertThrows(
-            ConfigurationException.class,
-            () -> props("m.0", "1,2,3", "m.1", "4,5").getMatrix("m"));
+            ConfigurationException.class, () -> props("m.0", "1,2,3", "m.1", "4,5").getMatrix("m"));
     assertTrue(e.getMessage().contains("1"), "debe indicar qué fila falla");
   }
 
@@ -267,7 +267,8 @@ class PetriNetPropertiesTest {
   void testFromResourceMissing() {
     ConfigurationException e =
         assertThrows(
-            ConfigurationException.class, () -> PetriNetProperties.fromResource("no-existe.properties"));
+            ConfigurationException.class,
+            () -> PetriNetProperties.fromResource("no-existe.properties"));
     assertTrue(e.getMessage().contains("no-existe.properties"));
   }
 
@@ -277,7 +278,8 @@ class PetriNetPropertiesTest {
     // Usa un recurso que ya existe en el proyecto, así el test no depende de ningún
     // archivo extra. Lo que se verifica acá es la resolución del classpath; el contenido
     // concreto de cada red se testea en PetriNetFixturesTest.
-    PetriNetDefinition d = PetriNetProperties.fromResource("exampleHuang.properties").toDefinition();
+    PetriNetDefinition d =
+        PetriNetProperties.fromResource("exampleHuang.properties").toDefinition();
     assertNotNull(d);
     assertEquals(14, d.pre().length);
     assertEquals(10, d.pre()[0].length);

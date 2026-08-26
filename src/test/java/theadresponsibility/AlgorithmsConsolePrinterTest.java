@@ -183,7 +183,8 @@ class AlgorithmsConsolePrinterTest {
         AnalysisFormatter.formatSortedSet(allocator.getClassifier().getActionPlaces(), "P");
 
     assertTrue(
-        capture(AlgorithmsConsolePrinter::printActionPlaces).contains(fromApi.replace("{", "[").replace("}", "]"))
+        capture(AlgorithmsConsolePrinter::printActionPlaces)
+                .contains(fromApi.replace("{", "[").replace("}", "]"))
             || capture(AlgorithmsConsolePrinter::printActionPlaces).contains(fromApi),
         "la consola debería mostrar las mismas plazas que la API: " + fromApi);
   }

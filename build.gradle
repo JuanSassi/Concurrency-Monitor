@@ -14,7 +14,7 @@ sourceCompatibility = '21'
 targetCompatibility = '21'
 
 application {
-    mainClass = 'concurrencymonitor.Main'
+    mainClass = 'Main'
 }
 
 repositories {
@@ -35,7 +35,7 @@ tasks.register('runWeb', JavaExec) {
     group = 'application'
     description = 'Corre el servidor web (API + frontend), separado de Main (consola).'
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = 'concurrencymonitor.web.WebApplication'
+    mainClass = 'WebApplication'
 }
 
 // ── Formato (≈ black + isort) ────────────────────────────
@@ -133,7 +133,7 @@ sonar {
 // ── JAR ejecutable (igual que antes) ────────────────────
 jar {
     manifest {
-        attributes 'Main-Class': 'concurrencymonitor.Main'
+        attributes 'Main-Class': 'Main'
     }
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }

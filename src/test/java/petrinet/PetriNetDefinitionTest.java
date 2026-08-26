@@ -84,7 +84,8 @@ class PetriNetDefinitionTest {
   void testDefensiveCopyOnConstruction() {
     int[][] originalPre = pre();
     int[] originalMarking = {1, 0};
-    PetriNetDefinition d = new PetriNetDefinition(originalPre, post(), originalMarking, new int[] {0, 0});
+    PetriNetDefinition d =
+        new PetriNetDefinition(originalPre, post(), originalMarking, new int[] {0, 0});
 
     originalPre[0][0] = 99;
     originalMarking[0] = 99;
@@ -176,7 +177,9 @@ class PetriNetDefinitionTest {
   void testZeroTransitions() {
     assertThrows(
         PetriNetValidationException.class,
-        () -> new PetriNetDefinition(new int[][] {{}}, new int[][] {{}}, new int[] {0}, new int[] {}));
+        () ->
+            new PetriNetDefinition(
+                new int[][] {{}}, new int[][] {{}}, new int[] {0}, new int[] {}));
   }
 
   @Test
@@ -184,7 +187,9 @@ class PetriNetDefinitionTest {
   void testPostRowCountMismatch() {
     assertThrows(
         PetriNetValidationException.class,
-        () -> new PetriNetDefinition(pre(), new int[][] {{0, 1}}, new int[] {1, 0}, new int[] {0, 0}));
+        () ->
+            new PetriNetDefinition(
+                pre(), new int[][] {{0, 1}}, new int[] {1, 0}, new int[] {0, 0}));
   }
 
   @Test
@@ -260,8 +265,7 @@ class PetriNetDefinitionTest {
         assertThrows(
             PetriNetValidationException.class,
             () ->
-                new PetriNetDefinition(
-                    new int[201][1], new int[201][1], new int[201], new int[1]));
+                new PetriNetDefinition(new int[201][1], new int[201][1], new int[201], new int[1]));
     assertTrue(e.getMessage().contains("200"), "el mensaje debe mencionar el límite");
   }
 

@@ -285,7 +285,8 @@ class PetriNetTest {
   void testIsTemporary() {
     PetriNet net = new PetriNet(pre(), post(), new int[] {1, 0}, new int[] {0, 3});
     assertFalse(net.isTemporary(0));
-    assertTrue(net.isTemporary(1), "cualquier valor distinto de 0 marca la transición como temporal");
+    assertTrue(
+        net.isTemporary(1), "cualquier valor distinto de 0 marca la transición como temporal");
   }
 
   // ── integración con la configuración ──────────────────────
@@ -331,8 +332,6 @@ class PetriNetTest {
     // miran. Una matriz irregular revienta después, con una excepción sin contexto.
     assertThrows(
         ArrayIndexOutOfBoundsException.class,
-        () ->
-            new PetriNet(
-                new int[][] {{1, 0}, {1}}, post(), new int[] {1, 0}, new int[] {0, 0}));
+        () -> new PetriNet(new int[][] {{1, 0}, {1}}, post(), new int[] {1, 0}, new int[] {0, 0}));
   }
 }

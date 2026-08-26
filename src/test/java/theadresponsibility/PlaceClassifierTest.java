@@ -13,8 +13,8 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link PlaceClassifier}.
  *
  * <p>La clasificación depende de los P-invariantes, del marcado inicial y de la matriz de
- * incidencia. Los tests sobre redes reales reutilizan un cálculo cacheado, porque construir
- * {@link Invariants} para exampleHuang cuesta más de un segundo.
+ * incidencia. Los tests sobre redes reales reutilizan un cálculo cacheado, porque construir {@link
+ * Invariants} para exampleHuang cuesta más de un segundo.
  *
  * @author Sassi Juan Ignacio
  */
@@ -167,7 +167,8 @@ class PlaceClassifierTest {
   void testPaOfItOnlyHasActionPlaces() {
     for (java.util.List<Integer> group : huang().getPaOfIt()) {
       assertTrue(
-          huang().getActionPlaces().containsAll(group), "PA contiene una plaza de recurso: " + group);
+          huang().getActionPlaces().containsAll(group),
+          "PA contiene una plaza de recurso: " + group);
     }
   }
 

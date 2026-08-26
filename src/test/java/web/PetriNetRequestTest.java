@@ -61,17 +61,13 @@ class PetriNetRequestTest {
     int[] v = {0};
 
     assertThrows(
-        PetriNetValidationException.class,
-        () -> new PetriNetRequest(null, m, v, v).toDefinition());
+        PetriNetValidationException.class, () -> new PetriNetRequest(null, m, v, v).toDefinition());
     assertThrows(
-        PetriNetValidationException.class,
-        () -> new PetriNetRequest(m, null, v, v).toDefinition());
+        PetriNetValidationException.class, () -> new PetriNetRequest(m, null, v, v).toDefinition());
     assertThrows(
-        PetriNetValidationException.class,
-        () -> new PetriNetRequest(m, m, null, v).toDefinition());
+        PetriNetValidationException.class, () -> new PetriNetRequest(m, m, null, v).toDefinition());
     assertThrows(
-        PetriNetValidationException.class,
-        () -> new PetriNetRequest(m, m, v, null).toDefinition());
+        PetriNetValidationException.class, () -> new PetriNetRequest(m, m, v, null).toDefinition());
   }
 
   @Test
@@ -103,8 +99,7 @@ class PetriNetRequestTest {
     assertThrows(
         PetriNetValidationException.class,
         () ->
-            new PetriNetRequest(
-                    new int[][] {null}, new int[][] {{1}}, new int[] {0}, new int[] {0})
+            new PetriNetRequest(new int[][] {null}, new int[][] {{1}}, new int[] {0}, new int[] {0})
                 .toDefinition());
   }
 
@@ -114,8 +109,7 @@ class PetriNetRequestTest {
     assertThrows(
         PetriNetValidationException.class,
         () ->
-            new PetriNetRequest(
-                    new int[][] {{}}, new int[][] {{}}, new int[] {0}, new int[] {})
+            new PetriNetRequest(new int[][] {{}}, new int[][] {{}}, new int[] {0}, new int[] {})
                 .toDefinition());
   }
 
@@ -186,8 +180,7 @@ class PetriNetRequestTest {
     assertThrows(
         PetriNetValidationException.class,
         () ->
-            new PetriNetRequest(
-                    new int[][] {{-1}}, new int[][] {{1}}, new int[] {0}, new int[] {0})
+            new PetriNetRequest(new int[][] {{-1}}, new int[][] {{1}}, new int[] {0}, new int[] {0})
                 .toDefinition());
   }
 
@@ -198,8 +191,7 @@ class PetriNetRequestTest {
     ThreadAllocator allocator = new ThreadAllocator(d);
 
     assertTrue(allocator.getMaxActiveThreads() >= 0);
-    assertEquals(
-        allocator.getSegments().size(), allocator.getThreadsPerSegment().size());
+    assertEquals(allocator.getSegments().size(), allocator.getThreadsPerSegment().size());
   }
 
   // ── comportamiento documentado, no deseable ───────────────

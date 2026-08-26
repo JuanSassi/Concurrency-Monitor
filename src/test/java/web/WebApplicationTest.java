@@ -47,9 +47,7 @@ class WebApplicationTest {
   @DisplayName("el controller se registra explícitamente como @Bean")
   void testControllerBeanIsDeclared() throws NoSuchMethodException {
     assertTrue(
-        WebApplication.class
-            .getMethod("analysisController")
-            .isAnnotationPresent(Bean.class),
+        WebApplication.class.getMethod("analysisController").isAnnotationPresent(Bean.class),
         "sin @Bean el controller no queda registrado y las rutas devuelven 404");
   }
 

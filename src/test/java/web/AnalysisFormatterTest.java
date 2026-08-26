@@ -26,8 +26,7 @@ class AnalysisFormatterTest {
   @Test
   @DisplayName("sortedLabels ordena y prefija")
   void testSortedLabels() {
-    assertEquals(
-        List.of("P1", "P3", "P7"), AnalysisFormatter.sortedLabels(List.of(7, 1, 3), "P"));
+    assertEquals(List.of("P1", "P3", "P7"), AnalysisFormatter.sortedLabels(List.of(7, 1, 3), "P"));
   }
 
   @Test
